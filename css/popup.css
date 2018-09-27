@@ -1,0 +1,202 @@
+* {
+  margin: 0;
+  padding: 0;
+}
+
+.hidden{
+  display: none !important;
+}
+
+.msg-box {
+  position: fixed;
+  left:50%;
+  top:50%;
+  z-index: 999999;
+  max-width: 300px;
+  min-width: 100px;
+  padding: 8px;
+  border-radius: 5px;
+  line-height: 1.5;
+  background-color: rgba(0, 0, 0, .8);
+  font-size: 14px;
+  text-align: center;
+  color: #fff;
+  word-break:break-all;
+  transform: translate(-50%,-50%);
+}
+
+.btn {
+  padding: 0 10px;
+  height: 30px;
+  line-height: 30px;
+  border: 1px solid #409eff;
+  border-radius: 5px;
+  background-color: #409eff;
+  color: #fff;
+  cursor: pointer;
+}
+.btn:focus{
+  outline: none;
+}
+.btn:hover{
+  background-color: #55aaff;
+}
+.btn.disabled, .btn[disabled]{
+  background-color: #ccc;
+  border-color: #ccc;
+  cursor: not-allowed;
+}
+
+.btn+.btn{
+  margin-left: 10px;
+}
+
+.popup .popup-header {
+  padding: 10px 0;
+  border-bottom: 1px solid #dadada;
+  text-align: center;
+  font-size: 16px;
+}
+
+.popup .popup-body {
+  overflow-y: auto;
+  width: 420px;
+  max-height: 340px;
+  padding: 15px;
+  font-size: 14px;
+}
+
+.popup .popup-loading{
+  height: 40px;
+  line-height: 40px;
+  text-align: center;
+  font-size: 14px;
+}
+
+.popup .popup-footer {
+  padding: 10px;
+  text-align: center;
+  border-top: 1px solid #dadada;
+}
+
+.popup .popup-body h4{
+  margin-bottom: 5px;
+  padding-bottom: 5px;
+  border-bottom: 1px solid #DADADA;
+  font-size: 14px;
+}
+
+.popup .checkbox-group{
+  padding: 5px;
+  font-size: 14px;
+}
+
+.popup .checkbox-group label{
+  display: inline-block;
+  margin-right: 10px;
+  margin-bottom: 2px;
+}
+
+.popup .checkbox-group [type="checkbox"]{
+  margin-right: 4px;
+}
+
+.popup .textarea-group {
+  padding: 4px;
+}
+
+.popup .textarea-group textarea{
+  overflow-y: auto;
+  width: 100%;
+  font-size: 14px;
+  font-family: Arial;
+}
+
+.popup .form-group {
+  display: -webkit-flex;
+  display: flex;
+  margin-bottom: 10px;
+  font-size: 14px;
+}
+
+.popup .form-group label {
+  display: block;
+  line-height: 30px;
+  padding-right: 10px;
+  text-align: right;
+}
+
+.popup .form-group label span{
+  display: inline-block;
+  width: 100px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  vertical-align: middle;
+}
+
+.popup .form-group label [type="checkbox"]{
+  margin-left: 6px;
+  vertical-align: middle;
+}
+
+.popup-body .form-control {
+  overflow: hidden;
+  -webkit-flex: 1;
+  flex: 1;
+  height: 30px;
+  line-height: 30px;
+  padding: 0 4px;
+  border: 1px solid #dadada;
+  border-radius: 3px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.popup-body textarea.form-control {
+  height: 80px;
+  line-height: 1.5;
+  resize: none;
+  white-space: inherit;
+}
+
+.log{
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 10px 15px;
+  border-top: 1px solid #dadada;
+  background-color: #fff;
+}
+
+.log h4{
+  padding-bottom: 5px;
+  border-bottom: 1px solid #dadada;
+  font-size: 14px;
+}
+
+.log .textarea-group{
+  padding: 8px 0;
+}
+
+.log .textarea-group textarea{
+  overflow-y: auto;
+  width: 100%;
+  height: 100px;
+  box-sizing: border-box;
+  padding: 0 4px;
+  border: 1px solid #dadada;
+  border-radius: 3px;
+  font-size: 14px;
+  font-family: Arial;
+  resize: none;
+}
+
+.log .textarea-group textarea:focus{
+  outline: none;
+}
+
+.log .btn-group{
+  text-align: right;
+}

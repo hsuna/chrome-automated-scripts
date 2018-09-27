@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+	<link rel="stylesheet" href="/css/popup.css">
+</head>
+<body>
+	<div id="app">
+		<div class="popup">
+			<div class="popup-header">设置回复信息</div>
+			<div class="popup-body">
+				<form id="renderer">
+					<div class="popup-loading">载入中...</div>
+				</form>
+			</div>
+			<div class="popup-footer">
+				<button id="saveBtn" type="button" class="btn" disabled>保存</button>
+				<button id="runBtn" type="button" class="btn" disabled>运行</button>
+				<button id="stopBtn" type="button" class="btn" disabled>停止</button>
+				<button id="closeBtn" type="button" class="btn" disabled>关闭</button>
+				<button id="openLogBtn" type="button" class="btn" disabled>打印信息</button>
+			</div>
+		</div>
+		<div id="log" class="log hidden">
+			<h4>打印信息：</h4>
+			<div class="textarea-group">
+				<textarea id="logTxt" class="form-control" readonly="readonly"></textarea>
+			</div>
+			<div class="btn-group">
+				<button id="clearBtn" type="button" class="btn" style="float:left;">清空</button>
+				<button id="closeLogBtn" type="button" class="btn">关闭</button>
+			</div>
+		</div>
+	</div>
+	<script src="./js/lib/jq.min.js"></script>
+	<script src="./js/popup.js"></script>
+</body>
+</html>

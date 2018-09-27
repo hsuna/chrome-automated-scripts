@@ -1,0 +1,31 @@
+{
+  "name": "tf-20180925-chrome-reply",
+  "version": "1.0.0",
+  "description": "",
+  "author": "chenyangzhi <chenyangzhi@3k.com>",
+  "private": true,
+  "scripts": {
+    "start": "npm run dev",
+    "dev": "webpack --watch --config config/webpack.dev.conf.js",
+    "build": "set NODE_ENV=production && webpack --config config/webpack.prod.conf.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "http://git.3k.com/web/tf-20180925-chrome-reply.git"
+  },
+  "license": "ISC",
+  "devDependencies": {
+    "babel-core": "^6.26.3",
+    "babel-loader": "^7.1.1",
+    "babel-plugin-transform-runtime": "^6.22.0",
+    "babel-preset-env": "^1.3.2",
+    "babel-preset-stage-2": "^6.22.0",
+    "clean-webpack-plugin": "^0.1.19",
+    "copy-webpack-plugin": "^4.5.2",
+    "uglifyjs-webpack-plugin": "^1.3.0",
+    "webpack": "^3.6.0"
+  },
+  "dependencies": {
+    "glob": "^7.1.3"
+  }
+}
