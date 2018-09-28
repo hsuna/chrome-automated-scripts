@@ -1,21 +1,23 @@
 import PS from "../../common/pubsub"
 
 export default class BaseReply{
-    constructor(name){
-        this.name = name;
-        this.isStop = true;
-        this.cacheData = null;
+    constructor(id){
+        this.id = id
+        this.isStop = true
+        this.cacheData = null
         this.storageData = null
+        this.init();
     }
-    async init(data={}){
-        this.storageData = data
-        let render = await this.renderer()
-        PS.popup('render', {
-            enabled: render ? true : false,
-            template: render || '该插件不能应用在该页面上'
-        })
+    async init(data){
+        let reply = {
+            id: this.id,
+            data: data || await this.data(),
+            style: await this.style(),
+            template: await this.template()
+        }
+        PS.popup('init', reply)
     }
-    async start(data={}){
+    async start(data){
         this.isStop = false;
         this.cacheData = this.parseData(data);
         PS.popup('cache', this.cacheData)
@@ -23,22 +25,29 @@ export default class BaseReply{
         this.toast('自动回复开始，请勿操作');
         this.run();
     }
-    async continue({ cache, isStop }){
-        this.isStop = isStop;
+    async continue(cache){
         this.cacheData = cache;
         this.run();
     }
     async stop(){
         this.isStop = true;
     }
-    async renderer(){
-        return null
+
+    async data(){
+        return {}
+    }
+    async style(){
+        return ''
+    }
+    async template(){
+        return ''
     }
     run(){
 
     }
     complete(){
         this.toast('自动回复完成')
+        PS.popup('cache', this.cacheData);
     }
     cache(){
         PS.popup('cache', this.cacheData);

@@ -1,17 +1,16 @@
 import PS from "./common/pubsub.js"
-import { Reply, ReplyControl } from './module/reply';
+import BaseReply from './module/reply/BaseReply'
 
-let reply = new Reply();
+let reply;
 
-/**监听前台初始化 */
-PS.listen(PS.CONTENT+'.init', ({ type, data }) => {
-  PS.popup('init', reply.name)
+PS.listen(PS.INJECT+'.load', ({ id, code, data }) => {
+  let Reply = new Function(`return ${code}`)()(BaseReply)
+  reply = new Reply(id)
+  reply.init(data)
 })
 
-/**监听回调函数 */
-PS.listen(PS.CONTENT+'.call', ({ type, data }) => {
-  reply[type](data);
-});
+PS.listen(PS.INJECT+'.call', ({ name, data }) => {
+  reply && reply[name](data);
+})
 
-/**通知前台初始化完成 */
-PS.popup('init', reply.name)
+PS.popup('inject')

@@ -60,7 +60,7 @@
 /******/ 	__webpack_require__.p = "";
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = 7);
+/******/ 	return __webpack_require__(__webpack_require__.s = 4);
 /******/ })
 /************************************************************************/
 /******/ ([
@@ -70,23 +70,23 @@
 "use strict";
 const BACKGROUND = 'background';
 const POPUP = 'popup';
-const CONTENT = 'content';
+const INJECT = 'inject';
 
 const NOOP = _ => _;
 
 const Pubsub = {
     BACKGROUND,
     POPUP,
-    CONTENT,
+    INJECT,
     background(type, data={}, callback=NOOP){
         chrome.extension.sendMessage({ type: `${BACKGROUND}.${type}`, data }, callback)
     },
     popup(type, data={}, callback=NOOP){
         chrome.extension.sendMessage({ type: `${POPUP}.${type}`, data }, callback)
     },
-    content(type, data={}, callback=NOOP){
+    inject(type, data={}, callback=NOOP){
         chrome.tabs.query({ active: true, currentWindow: true }, ([tab]) => {
-            chrome.tabs.sendMessage(tab.id, { type: `${CONTENT}.${type}`, data }, callback)
+            chrome.tabs.sendMessage(tab.id, { type: `${INJECT}.${type}`, data }, callback)
         })
     },
     listen(type, callback=NOOP){
@@ -103,306 +103,277 @@ const Pubsub = {
 /* 1 */,
 /* 2 */,
 /* 3 */,
-/* 4 */,
-/* 5 */,
-/* 6 */,
-/* 7 */
+/* 4 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__common_pubsub__ = __webpack_require__(0);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__common_storage__ = __webpack_require__(8);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__common_serializer__ = __webpack_require__(9);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__common_fs__ = __webpack_require__(5);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__common_pubsub__ = __webpack_require__(0);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__common_storage__ = __webpack_require__(6);
 
 
 
 
-let initComplete = false;
-let injectData = {
-  name: '',
-  isStop: true,
-  cache: null
+
+const uuid = () => {
+  const S4 = () => (((1 + Math.random()) * 0x10000) | 0).toString(16).substring(1)
+  return S4() + S4() + "-" + S4() + "-" + S4() + "-" + S4() + "-" + S4() + S4() + S4()
 }
 
-/** 打印信息  */
-const log = msg => {
-  let logText = $('#logTxt').val()
-  $('#logTxt').val(logText += msg + '\n')
-}
+let vm = new Vue({
+  el: '#app',
+  data: {
+    id: null,
+    status: 0, //0：停止 1：运行 2：运行中 3：停止中 99：编辑
 
-/** 提示信息  */
-const toast = (txt = '', time = 1500) => {
-  let $msg = $('<div />').html(`<div class="msg-box">${txt}</div>`).appendTo($('body'))
-  setTimeout(_ => $msg.remove(), time)
-  log(txt)
-}
+    isShowFile: true,
+    isShowLog: false,
+    dialogType: null,
 
-/** 保存页面信息  */
-const saveStorage = () => {
-  let data = Object(__WEBPACK_IMPORTED_MODULE_2__common_serializer__["a" /* serializeObject */])($('#renderer').serializeArray());
-  Object(__WEBPACK_IMPORTED_MODULE_1__common_storage__["b" /* saveLocal */])(`group_${injectData.name}`, data)
-  return data;
-}
+    logText: '',
 
-/** 保存按钮  */
-$('#saveBtn').on('click', evt => {
-  saveStorage()
-  toast('保存成功')
-})
+    newFileName: '',
+    newFilePath: '',
+    newFile: null,
+    delFileIds: [],
+    checkIds: [],
 
-/** 运行按钮  */
-$('#runBtn').on('click', evt => {
-  //保存数据
-  injectData.isStop = false;
-  let data = saveStorage();
-  __WEBPACK_IMPORTED_MODULE_0__common_pubsub__["a" /* default */].content('call', { type:'start', data })
-})
+    fileList: [],
 
-/** 关闭按钮  */
-$('#closeBtn').on('click', evt => {
-  injectData.isStop = true;
-  let popup = chrome.extension.getViews({type: "popup"})[0];
-  popup.close()
-})
+    renderData: {},
+    renderCache: null
+  },
+  created () {
+    Object(__WEBPACK_IMPORTED_MODULE_2__common_storage__["a" /* getLocal */])('fileList').then(res => {
+      this.fileList = res || [];
+    })
 
-/** 停止按钮  */
-$('#stopBtn').on('click', evt => {
-  injectData.isStop = true;
-  toast('停止运行')
-  __WEBPACK_IMPORTED_MODULE_0__common_pubsub__["a" /* default */].content('call', { type:'stop' })
-})
+    __WEBPACK_IMPORTED_MODULE_1__common_pubsub__["a" /* default */].listen(__WEBPACK_IMPORTED_MODULE_1__common_pubsub__["a" /* default */].POPUP+'.inject', () => {
+      if(this.id) readerFile(this.id)
+    })
 
-/** 打开打印信息  */
-$('#openLogBtn').on('click', evt => {
-  $('#log').removeClass('hidden');
-});
+    __WEBPACK_IMPORTED_MODULE_1__common_pubsub__["a" /* default */].listen(__WEBPACK_IMPORTED_MODULE_1__common_pubsub__["a" /* default */].POPUP+'.init', reply => {
+      this.id = reply.id,
+      this.renderData = res || reply.data
+      if(99 == this.status){
+        this.isShowFile = false;
+        this.createRender(reply.id, reply.template)
+      }else if(1 == this.status){
+        __WEBPACK_IMPORTED_MODULE_1__common_pubsub__["a" /* default */].inject('call', { name:'start', data: this.renderData })
+      }else if(2 == this.status){
+        __WEBPACK_IMPORTED_MODULE_1__common_pubsub__["a" /* default */].inject('call', { name:'continue', data: this.renderCache })
+      }
+    })
 
-/** 关闭打印信息  */
-$('#closeLogBtn').on('click', evt => {
-  $('#log').addClass('hidden');
-});
+    /** 监听运行完成  */
+    __WEBPACK_IMPORTED_MODULE_1__common_pubsub__["a" /* default */].listen(__WEBPACK_IMPORTED_MODULE_1__common_pubsub__["a" /* default */].POPUP+'.complete', data => {
+      this.status = 0
+      this.renderCache = null
+    })
 
-/** 清除打印信息  */
-$('#clearBtn').on('click', evt => {
-  $('#logTxt').val('');
-});
+    /** 监听缓存数据  */
+    __WEBPACK_IMPORTED_MODULE_1__common_pubsub__["a" /* default */].listen(__WEBPACK_IMPORTED_MODULE_1__common_pubsub__["a" /* default */].POPUP+'.cache', data => {
+      this.renderCache = data;
+    })
 
-/** 监听渲染模板  */
-__WEBPACK_IMPORTED_MODULE_0__common_pubsub__["a" /* default */].listen(__WEBPACK_IMPORTED_MODULE_0__common_pubsub__["a" /* default */].POPUP+'.render', ({ enabled, template }, sendRes) => {
-  enabled && $('.popup-footer .btn').removeAttr('disabled')
-  $('#renderer').html(template)
+    /** 监听提示信息  */
+    __WEBPACK_IMPORTED_MODULE_1__common_pubsub__["a" /* default */].listen(__WEBPACK_IMPORTED_MODULE_1__common_pubsub__["a" /* default */].POPUP+'.toast', msg => this.toast(msg))
 
-  initComplete = true;
-})
+    /** 监听打印信息  */
+    __WEBPACK_IMPORTED_MODULE_1__common_pubsub__["a" /* default */].listen(__WEBPACK_IMPORTED_MODULE_1__common_pubsub__["a" /* default */].POPUP+'.log', msg => this.log(msg))
+  },
+  mounted () {
+    /** 通知内容页-插件启动  */
+    //PS.inject('init')
+  },
+  methods: {
+    handlerAddDialog(){
+      if('' == this.newFileName){
+        return this.toast('文件名不能为空')
+      }
+      if('' == this.newFilePath){
+        return this.toast('文件路径不能为空')
+      }
 
-/** 监听缓存数据  */
-__WEBPACK_IMPORTED_MODULE_0__common_pubsub__["a" /* default */].listen(__WEBPACK_IMPORTED_MODULE_0__common_pubsub__["a" /* default */].POPUP+'.cache', cache => {
-  injectData.cache = cache;
-})
+      let data = {
+        id: uuid(),
+        name: this.newFileName,
+        path: this.newFilePath,
+      }
+      
+      __WEBPACK_IMPORTED_MODULE_0__common_fs__["a" /* default */].writerFile(data.id, this.newFile).then(res => {
+        this.fileList.push(data)
+        return Object(__WEBPACK_IMPORTED_MODULE_2__common_storage__["b" /* setLocal */])('fileList', this.fileList)
+      }).then(res => {
+        this.dialogType = null
+        this.newFile = null
+        this.newFileName = ''
+        this.newFilePath = ''
+        this.toast('添加成功')
+      })
+    },
+    handlerDelDialog(){
+      for(let i=this.fileList.length-1; i>=0; i--){
+        let item = this.fileList[i]
+        if(this.delFileIds.includes(item.id)){
+          this.fileList.splice(i, 1);
+        }
+      }
+      Object(__WEBPACK_IMPORTED_MODULE_2__common_storage__["b" /* setLocal */])('fileList', this.fileList).then(res => {
+        this.dialogType = null
+        this.delFileIds = [];
+        this.toast('删除成功')
+      })
+    },
+    handlerAddFile(){
+      this.newFileName = ''
+      this.newFilePath = ''
+      this.dialogType = 'add'
+    },
+    handlerSaveFile(file){
+      Object(__WEBPACK_IMPORTED_MODULE_2__common_storage__["b" /* setLocal */])(`cache-${this.id}`, this.renderData).then(res => {
+        this.toast('保存成功')
+      })
+    },
+    handlerStopFile(){
+      this.status = 3;
+      this.toast('已暂停')
+    },
+    handlerRunFile(file){
+      if(3 == this.status){
+        __WEBPACK_IMPORTED_MODULE_1__common_pubsub__["a" /* default */].inject('call', { name:'continue', data: this.renderCache })
+      }else{
+        this.status = 1;
+        this.readerFile(file.id)
+        this.handlerSaveFile(file)
+      }
+    },
+    handlerModifyFile(file){
+      this.status = 99;
+      this.readerFile(file.id)
+    },
+    handlerDeleteFile(file){
+      this.delFileIds = [file.id];
+      this.dialogType = 'remove';
+    },
+    handlerBatchDelFile(){
+      if(this.checkIds.length>0){
+        this.delFileIds = [...this.checkIds];
+        this.dialogType = 'remove';
+      }else{
+        this.toast('至少选中一条数据')
+      }
+    },
+    handlerBatchRunFile(){
+      if(this.checkIds.length>0){
+       // this.delFileIds = [...this.checkIds];
+       // this.dialogType = 'remove';
+      }else{
+        this.toast('至少选中一条数据')
+      }
+    },
+    handlerBatchStopFile(){
+      if(this.checkIds.length>0){
+       // this.delFileIds = [...this.checkIds];
+       // this.dialogType = 'remove';
+      }else{
+        this.toast('至少选中一条数据')
+      }
+    },
+    handlerBack(){
+      this.isShowFile = true;
+      this.isShowLog = false;
+    },
+    handlerClose(){
+      let popup = chrome.extension.getViews({type: "popup"})[0];
+      popup.close()
+    },
 
-/** 监听提示信息  */
-__WEBPACK_IMPORTED_MODULE_0__common_pubsub__["a" /* default */].listen(__WEBPACK_IMPORTED_MODULE_0__common_pubsub__["a" /* default */].POPUP+'.toast', msg => toast(msg))
+    createRender(name, template) {
+      let renderComponent = Vue.extend({
+        name,
+        props: ['data'],
+        template
+      })
+      Vue.component(name, renderComponent);
+    },
+    readerFile(id){
+      Object(__WEBPACK_IMPORTED_MODULE_2__common_storage__["a" /* getLocal */])(`cache-${reply.id}`).then(data => {
+        __WEBPACK_IMPORTED_MODULE_0__common_fs__["a" /* default */].readerFile(file.id).then(res => {
+          let reader = new FileReader();
+          reader.onloadend = _=> __WEBPACK_IMPORTED_MODULE_1__common_pubsub__["a" /* default */].inject('load', { id, data, code: reader.result })
+          reader.readAsText(res);
+        })
+      })
+    },
+    getFileNameById(id){
+      let list = this.fileList.filter(item => id==item.id)
+      return list[0]?list[0].name:''
+    },
 
-/** 监听打印信息  */
-__WEBPACK_IMPORTED_MODULE_0__common_pubsub__["a" /* default */].listen(__WEBPACK_IMPORTED_MODULE_0__common_pubsub__["a" /* default */].POPUP+'.log', msg => log(msg))
-
-/** 监听内容页初始化完成  */
-__WEBPACK_IMPORTED_MODULE_0__common_pubsub__["a" /* default */].listen(__WEBPACK_IMPORTED_MODULE_0__common_pubsub__["a" /* default */].POPUP+'.init', (name, sendRes) => {
-  if(initComplete){
-    __WEBPACK_IMPORTED_MODULE_0__common_pubsub__["a" /* default */].content('call', { type:'continue', data: injectData })
-  }else if(name){
-    __WEBPACK_IMPORTED_MODULE_0__common_pubsub__["a" /* default */].content('call', { type:'init', data: Object(__WEBPACK_IMPORTED_MODULE_1__common_storage__["a" /* getLocal */])(`group_${name}`) })
+    /** 提示信息  */
+    toast(txt = '', time = 1500) {
+      let $msg = document.createElement('div')
+      $msg.innerHTML = `<div class="msg-box">${txt}</div>`
+      document.body.appendChild($msg)
+      setTimeout(_ => document.body.removeChild($msg), time)
+      this.log(txt)
+    },
+    /** 打印信息  */
+    log(msg){
+      this.logText += msg + '\n'
+    }
   }
-  injectData.name = name;
 })
-
-/** 通知内容页-插件启动  */
-__WEBPACK_IMPORTED_MODULE_0__common_pubsub__["a" /* default */].content('init')
 
 /***/ }),
-/* 8 */
+/* 5 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
-/* unused harmony export getLocalStr */
-/* unused harmony export saveLocalStr */
+
+window.requestFileSystem = window.requestFileSystem || window.webkitRequestFileSystem;
+
+const TYPE = window.TEMPORARY
+const SIZE = 5 * 1024
+
+const fs = {
+    writerFile(name, file){
+        return new Promise((resolve, rejects) => {
+            window.requestFileSystem(TYPE, SIZE, fs => {
+                fs.root.getFile(name, { create: true, exclusive: true }, entry => {
+                    entry.createWriter(writer => {
+                        writer.onwriteend = resolve
+                        writer.onerror = rejects
+                        writer.write(file)
+                    })
+                }, rejects)
+            }, rejects)
+        })
+    },
+    readerFile(name){
+        return new Promise((resolve, rejects) => {
+            window.requestFileSystem(TYPE, SIZE, fs => {
+                fs.root.getFile(name, { create: false }, entry => entry.file(resolve))
+            }, rejects)
+        })
+    }
+}
+
+/* harmony default export */ __webpack_exports__["a"] = (fs);
+
+/***/ }),
+/* 6 */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return getLocal; });
-/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "b", function() { return saveLocal; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "b", function() { return setLocal; });
 /* unused harmony export removeLocal */
-const getLocalStr = key => localStorage.getItem(key)
-const saveLocalStr = (key, value) => localStorage.setItem(key, value)
-
-const getLocal = key => JSON.parse(localStorage.getItem(key) || '{}')
-const saveLocal = (key, value) => localStorage.setItem(key, JSON.stringify(value))
-const removeLocal = key => localStorage.removeItem(key)
-
-
-
-/***/ }),
-/* 9 */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return serializeObject; });
-/* unused harmony export serializeJSON */
-const patterns = {
-    validate: /^[a-z_][a-z0-9_]*(?:\[(?:\d*|[a-z0-9_]+)\])*$/i,
-    key:      /[a-z0-9_]+|(?=\[\])/gi,
-    push:     /^$/,
-    fixed:    /^\d+$/,
-    named:    /^[a-z0-9_]+$/i
-};
-
-function isObj(x){ 
-    var type = typeof x;
-    return x !== null && (type === 'object' || type === 'function');
-}
- 
-function toObject(val) {
-    if (val === null || val === undefined) {
-        throw new TypeError('Cannot convert undefined or null to object');
-    }
- 
-    return Object(val);
-}
- 
-function assignKey(to, from, key) {
-    var val = from[key];
- 
-    if (val === undefined || val === null) {
-        return;
-    }
- 
-    if (to.hasOwnProperty(key)) {
-        if (to[key] === undefined || to[key] === null) {
-            throw new TypeError('Cannot convert undefined or null to object (' + key + ')');
-        }
-    }
- 
-    if (!to.hasOwnProperty(key) || !isObj(val)) {
-        to[key] = val;
-    } else {
-        to[key] = assign(Object(to[key]), from[key]);
-    }
-}
- 
-function assign(to, from) {
-    if (to === from) {
-        return to;
-    }
- 
-    from = Object(from);
- 
-    for (var key in from) {
-        if (from.hasOwnProperty(key)) {
-            assignKey(to, from, key);
-        }
-    }
- 
-    if (Object.getOwnPropertySymbols) {
-        var symbols = Object.getOwnPropertySymbols(from);
- 
-        for (var i = 0; i < symbols.length; i++) {
-            if (from.propIsEnumerable(symbols[i])) {
-                assignKey(to, from, symbols[i]);
-            }
-        }
-    }
- 
-    return to;
-}
- 
-function deepAssign(target) {
-    target = toObject(target);
- 
-    for (var s = 1; s < arguments.length; s++) {
-        assign(target, arguments[s]);
-    }
-    return target;
-}
-  
-function FormSerializer() {
-
-  // private variables
-  var data     = {},
-      pushes   = {};
-
-  // private API
-  function build(base, key, value) {
-    base[key] = value;
-    return base;
-  }
-
-  function makeObject(root, value) {
-
-    var keys = root.match(patterns.key), k;
-
-    // nest, nest, ..., nest
-    while ((k = keys.pop()) !== undefined) {
-      // foo[]
-      if (patterns.push.test(k)) {
-        var idx = incrementPush(root.replace(/\[\]$/, ''));
-        value = build([], idx, value);
-      }
-
-      // foo[n]
-      else if (patterns.fixed.test(k)) {
-        value = build([], k, value);
-      }
-
-      // foo; foo[bar]
-      else if (patterns.named.test(k)) {
-        value = build({}, k, value);
-      }
-    }
-
-    return value;
-  }
-
-  function incrementPush(key) {
-    if (pushes[key] === undefined) {
-      pushes[key] = 0;
-    }
-    return pushes[key]++;
-  }
-
-  function addPair(pair) {
-    if (!patterns.validate.test(pair.name)) return this;
-    var obj = makeObject(pair.name, "true"===pair.value || pair.value);
-    data = deepAssign(data, obj);
-    return this;
-  }
-
-  function addPairs(pairs) {
-    if (!Array.isArray(pairs)) {
-      throw new Error("formSerializer.addPairs expects an Array");
-    }
-    for (var i=0, len=pairs.length; i<len; i++) {
-      this.addPair(pairs[i]);
-    }
-    return this;
-  }
-
-  function serialize() {
-    return data;
-  }
-
-  function serializeJSON() {
-    return JSON.stringify(serialize());
-  }
-
-  // public API
-  this.addPair = addPair;
-  this.addPairs = addPairs;
-  this.serialize = serialize;
-  this.serializeJSON = serializeJSON;
-}
-  
-FormSerializer.patterns = patterns;
-
-const serializeObject = serializeArray => new FormSerializer().addPairs(serializeArray).serialize();
-const serializeJSON = serializeArray => new FormSerializer().addPairs(serializeArray).serializeJSON();
+const getLocal = key => new Promise(resolve => chrome.storage.local.get(key, data => resolve(data[key])))
+const setLocal = (key, value) => new Promise(resolve => chrome.storage.local.set({[key]: value}, resolve))
+const removeLocal = key => new Promise(resolve => chrome.storage.local.remove(key, resolve))
 
 
 

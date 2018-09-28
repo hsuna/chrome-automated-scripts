@@ -22,11 +22,14 @@
     "scripts": ["js/background.js"]
   },
   "permissions": [
+    "storage",
+    "unlimitedStorage",
     "declarativeContent"
   ],
+  "content_security_policy": "script-src 'self' 'unsafe-eval'; object-src 'self'",
   "content_scripts": [
     {
-      "matches": ["*://*.shiyuegame.com/*"],
+      "matches": ["*://*.baidu.com/*"],
       "css": [],
       "js": ["js/lib/jq.min.js", "js/inject.js"]
     }

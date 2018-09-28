@@ -9,32 +9,84 @@
 <body>
 	<div id="app">
 		<div class="popup">
-			<div class="popup-header">设置回复信息</div>
+			<div class="popup-header">
+				<a v-show="!isShowFile" class="btn-back" href="javascript:;" @click="handlerBack">返回</a>
+				<span>脚本</span>
+				<a class="btn-close" href="javascript:;" @click="handlerClose">关闭</a>
+			</div>
 			<div class="popup-body">
-				<form id="renderer">
-					<div class="popup-loading">载入中...</div>
-				</form>
+				<div v-show="isShowFile" class="popup-file-list">
+					<ul>
+						<li v-for="(index, file) in fileList">
+							<label :title="file.path">
+								<input type="checkbox" v-model="checkIds" :value="file.id"/>
+								{{file.name}}
+							</label>
+							<a href="javascript:;" @click="handlerRunFile(file)">[运行]</a>
+							<a href="javascript:;" @click="handlerModifyFile(file)">[修改]</a>
+							<a href="javascript:;" @click="handlerDeleteFile(file)">[删除]</a>
+						</li>
+					</ul>
+				</div>
+				<div v-else class="popup-renderer">
+					<component :is="id"></component>
+				</div>
 			</div>
 			<div class="popup-footer">
-				<button id="saveBtn" type="button" class="btn" disabled>保存</button>
-				<button id="runBtn" type="button" class="btn" disabled>运行</button>
-				<button id="stopBtn" type="button" class="btn" disabled>停止</button>
-				<button id="closeBtn" type="button" class="btn" disabled>关闭</button>
-				<button id="openLogBtn" type="button" class="btn" disabled>打印信息</button>
+				<div v-show="isShowFile" class="pull-left">
+					<button type="button" class="btn" @click="handlerAddFile">新增</button>
+					<button type="button" class="btn" @click="handlerBatchDelFile">删除</button>
+					<button type="button" class="btn" @click="handlerBatchRunFile">运行</button>
+				</div>
+				<div v-else class="pull-left">
+					<button type="button" class="btn" @click="handlerSaveFile">保存</button>
+					<button type="button" class="btn" @click="handlerRunFile">{{status=1'运行':'停止'}}</button>
+				</div>
+				<button type="button" class="btn" @click="isShowLog=true">打印信息</button>
 			</div>
 		</div>
-		<div id="log" class="log hidden">
+		<div class="log" v-show="isShowLog">
 			<h4>打印信息：</h4>
 			<div class="textarea-group">
-				<textarea id="logTxt" class="form-control" readonly="readonly"></textarea>
+				<textarea v-model="logText" class="form-control" readonly="readonly"></textarea>
 			</div>
 			<div class="btn-group">
-				<button id="clearBtn" type="button" class="btn" style="float:left;">清空</button>
-				<button id="closeLogBtn" type="button" class="btn">关闭</button>
+				<button id="clearBtn" type="button" class="btn pull-left" @click="logText=''">清空</button>
+				<button id="closeLogBtn" type="button" class="btn"  @click="isShowLog=false">关闭</button>
+			</div>
+		</div>
+		<div class="dialog-mask" v-if="dialogType">
+			<div class="dialog-wrap" v-if="'add' == dialogType">
+				<div class="dialog-header">新增脚本</div>
+				<div class="dialog-body">
+					<div class="form-group">
+						<label>文件名：</label>
+						<input type="text" class="form-control" v-model="newFileName" />
+					</div>
+					<div class="form-group">
+						<label>文件路径：</label>
+						<input type="file" class="form-control" v-model="newFilePath" @change="newFile=$event.target.files[0]" />
+					</div>
+				</div>
+				<div class="dialog-footer">
+					<button type="button" class="btn" @click="handlerAddDialog">确定</button>
+					<button type="button" class="btn" @click="dialogType=null">取消</button>
+				</div>
+			</div>
+			<div class="dialog-wrap" v-if="'remove' == dialogType">
+				<div class="dialog-header">提示</div>
+				<div class="dialog-text">
+					<span v-if="delFileIds.length>1">确定删除选中的{{delFileIds.length}}个文件吗?</span>
+					<span v-if="delFileIds.length==1">确定文件【{{getFileNameById(delFileIds[0])}}】吗?</span>
+				</div>
+				<div class="dialog-footer">
+					<button type="button" class="btn" @click="handlerDelDialog">确定</button>
+					<button type="button" class="btn" @click="dialogType=null;delFileIds=[];">取消</button>
+				</div>
 			</div>
 		</div>
 	</div>
-	<script src="./js/lib/jq.min.js"></script>
+	<script src="./js/lib/vue.min.js"></script>
 	<script src="./js/popup.js"></script>
 </body>
 </html>

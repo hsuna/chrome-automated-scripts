@@ -60,38 +60,16 @@
 /******/ 	__webpack_require__.p = "";
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = 1);
+/******/ 	return __webpack_require__(__webpack_require__.s = 7);
 /******/ })
 /************************************************************************/
-/******/ ([
-/* 0 */,
-/* 1 */
+/******/ ({
+
+/***/ 7:
 /***/ (function(module, exports) {
 
-chrome.runtime.onInstalled.addListener(() => {
-    chrome.declarativeContent.onPageChanged.removeRules(undefined, () => {        
-        chrome.declarativeContent.onPageChanged.addRules([{
-            conditions: [
-                new chrome.declarativeContent.PageStateMatcher({
-                    pageUrl: { urlContains: '.com' }
-                })
-            ],
-            actions: [
-                new chrome.declarativeContent.ShowPageAction()
-            ]
-        }])
-    })
-})
-
-chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-    if (message.url) {
-        chrome.downloads.download({
-            url: message.url,
-            conflictAction: 'uniquify',
-            saveAs: false
-        });
-    }
-});
+throw new Error("Module build failed: Error: ENOENT: no such file or directory, open 'e:\\git3k\\web\\Tech\\chrome_popup_template\\src\\popup.1.js'\n    at Error (native)");
 
 /***/ })
-/******/ ]);
+
+/******/ });

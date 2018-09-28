@@ -3,7 +3,7 @@ chrome.runtime.onInstalled.addListener(() => {
         chrome.declarativeContent.onPageChanged.addRules([{
             conditions: [
                 new chrome.declarativeContent.PageStateMatcher({
-                    pageUrl: { urlContains: 'shiyuegame.com' }
+                    pageUrl: { urlContains: '.com' }
                 })
             ],
             actions: [
@@ -12,3 +12,13 @@ chrome.runtime.onInstalled.addListener(() => {
         }])
     })
 })
+
+chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+    if (message.url) {
+        chrome.downloads.download({
+            url: message.url,
+            conflictAction: 'uniquify',
+            saveAs: false
+        });
+    }
+});

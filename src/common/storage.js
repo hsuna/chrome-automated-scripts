@@ -1,14 +1,9 @@
-const getLocalStr = key => localStorage.getItem(key)
-const saveLocalStr = (key, value) => localStorage.setItem(key, value)
-
-const getLocal = key => JSON.parse(localStorage.getItem(key) || '{}')
-const saveLocal = (key, value) => localStorage.setItem(key, JSON.stringify(value))
-const removeLocal = key => localStorage.removeItem(key)
+const getLocal = key => new Promise(resolve => chrome.storage.local.get(key, data => resolve(data[key])))
+const setLocal = (key, value) => new Promise(resolve => chrome.storage.local.set({[key]: value}, resolve))
+const removeLocal = key => new Promise(resolve => chrome.storage.local.remove(key, resolve))
 
 export {
-	getLocalStr,
-	saveLocalStr,
 	getLocal,
-	saveLocal,
+	setLocal,
 	removeLocal
 }
