@@ -61,13 +61,13 @@ let vm = new Vue({
 
     /** 监听运行完成  */
     PS.listen(PS.POPUP+'.complete', data => {
-      this.status = 0
-      this.toast('脚本运行完成')
-      this.log('================================')
-      if(this.fileBatch.length>0) {
-        let file = this.fileBatch.shift()
-        this.handlerRunFile(file)
-      }
+      this.log('脚本运行完成\n================================')
+      this.handlerComplete()
+    })
+    /** 监听运行失败  */
+    PS.listen(PS.POPUP+'.fail', data => {
+      this.log('脚本运行失败\n================================')
+      this.handlerComplete()
     })
 
     /** 监听提示信息  */
@@ -155,6 +155,7 @@ let vm = new Vue({
     handlerBatchDelFile(){
       if(this.checkFile.length>0){
         this.delFileIds = this.checkFile.map(item => item.id)
+        console.log(this.checkFile)
         this.dialogType = 'remove';
       }else{
         this.toast('至少选中一条数据')
@@ -180,6 +181,13 @@ let vm = new Vue({
     handlerClose(){
       let popup = chrome.extension.getViews({type: "popup"})[0];
       popup.close()
+    },
+    handlerComplete(){
+      this.status = 0
+      if(this.fileBatch.length>0) {
+        let file = this.fileBatch.shift()
+        this.handlerRunFile(file)
+      }
     },
 
     createRender(data) {

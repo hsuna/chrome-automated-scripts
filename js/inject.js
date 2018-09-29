@@ -180,10 +180,15 @@ class BaseReply{
     run(){
 
     }
-    complete(msg='自动回复完成'){
+    complete(){
+        this.isStop = true;
+        this.toast('自动回复完成')
+        __WEBPACK_IMPORTED_MODULE_0__common_pubsub__["a" /* default */].popup('complete')
+    }
+    fail(msg){
         this.isStop = true;
         this.toast(msg)
-        __WEBPACK_IMPORTED_MODULE_0__common_pubsub__["a" /* default */].popup('complete')
+        __WEBPACK_IMPORTED_MODULE_0__common_pubsub__["a" /* default */].popup('fail')
     }
     parse(data){
         return data;

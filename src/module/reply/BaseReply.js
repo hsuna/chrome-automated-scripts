@@ -47,10 +47,15 @@ export default class BaseReply{
     run(){
 
     }
-    complete(msg='自动回复完成'){
+    complete(){
+        this.isStop = true;
+        this.toast('自动回复完成')
+        PS.popup('complete')
+    }
+    fail(msg){
         this.isStop = true;
         this.toast(msg)
-        PS.popup('complete')
+        PS.popup('fail')
     }
     parse(data){
         return data;

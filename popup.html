@@ -21,7 +21,7 @@
 					<ul>
 						<li v-for="(index, file) in fileList">
 							<label :title="file.path">
-								<input type="checkbox" v-model="checkFile" :value="file.id"/>
+								<input type="checkbox" v-model="checkFile" :value="file"/>
 								{{file.name}}
 							</label>
 							<a href="javascript:;" @click="handlerRunFile(file)">[运行]</a>

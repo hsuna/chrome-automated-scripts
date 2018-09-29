@@ -5,7 +5,7 @@ module.exports = BaseReply => class FssjReply extends BaseReply{
     }
     async init(data){
         if(-1 != window.location.href.indexOf('admin.data.shiyuegame.com/login')){
-            this.complete('请登录成功后，再操作');
+            this.fail('请登录成功后，再操作');
         }else if(-1 == window.location.href.indexOf('gm/feedback')){
             window.location.href = 'https://admin.data.shiyuegame.com/gm/feedback/8'
         }else{

@@ -8,7 +8,7 @@ module.exports = Reply => class XcqyReply extends Reply{
         if(-1 == window.location.href.indexOf('m=SMP_GM_Feedback')){
             window.location.href = 'http://smp.xc2016.shiyuegame.com/?m=SMP_GM_Feedback'
         }else if($('#loginform').length>0){
-            this.complete('请登录成功后，再操作');
+            this.fail('请登录成功后，再操作');
         }else{
             super.init(data);
         }
