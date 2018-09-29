@@ -1,5 +1,5 @@
 {
-  "name": "chrome_popup_template",
+  "name": "chrome_auto_scripts ",
   "version": "1.0.0",
   "description": "",
   "author": "chenyangzhi <chenyangzhi@3k.com>",
@@ -12,7 +12,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "http://git.3k.com/web/Tech/chrome_popup_template.git"
+    "url": "http://git.3k.com/web/FE/chrome_auto_scripts .git"
   },
   "license": "ISC",
   "devDependencies": {
