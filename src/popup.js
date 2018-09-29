@@ -16,21 +16,26 @@ let vm = new Vue({
 
     isShowFile: true,
     isShowLog: false,
-    dialogType: null,
-
+    
     logText: '',
 
-    newFileName: '',
-    newFilePath: '',
-    newFile: null,
-    delFileIds: [],
+    dialogType: null,
+    dialogAdd: {
+      name: '',
+      file: null
+    },
+    dialogUpdate: {
+      name: '',
+      file: null
+    },
+    dialogDelete: [],
 
     checkFile: [],
     batchFile:[],
     
     fileList: [],
 
-    renderName: '',
+    renderName: 'render-loadding',
     renderData: {}
   },
   created () {
@@ -46,7 +51,6 @@ let vm = new Vue({
       this.id = reply.id
       this.renderData = reply.data
       if(-1 == this.status){
-        this.isShowFile = false;
         this.createRender(reply)
         this.status = 0
       }else if(1 == this.status){
@@ -78,48 +82,78 @@ let vm = new Vue({
   },
   methods: {
     handlerAddDialog(){
-      if('' == this.newFileName){
+      if('' == this.dialogAdd.name){
         return this.toast('脚本名不能为空')
       }
-      if('' == this.newFilePath){
+      if('' == this.dialogAdd.file){
         return this.toast('脚本路径不能为空')
       }
 
       let data = {
         id: uuid(),
-        name: this.newFileName,
-        path: this.newFilePath,
+        name: this.dialogAdd.name
       }
       
-      fs.writerFile(data.id, this.newFile).then(res => {
+      fs.writerFile(data.id, this.dialogAdd.file).then(res => {
         this.fileList.push(data)
         return setLocal('fileList', this.fileList)
       }).then(res => {
         this.dialogType = null
-        this.newFile = null
-        this.newFileName = ''
-        this.newFilePath = ''
+        this.dialogAdd = {}
         this.toast('添加成功')
+      })
+    },
+    async handlerUpdateDialog(){
+      if('' == this.dialogUpdate.name){
+        return this.toast('脚本名不能为空')
+      }
+
+      if(this.dialogUpdate.file){
+        await fs.updateFile(this.dialogUpdate.id, this.dialogUpdate.file)
+      }
+      
+      this.fileList.every(item => {
+        if(this.dialogUpdate.id == item.id){
+          item.name = this.dialogUpdate.name
+          return false
+        }
+      })
+      if(this.dialogUpdate.checked){
+        removeLocal(`cache-${this.dialogUpdate.id}`)
+      }
+      setLocal('fileList', this.fileList).then(res => {
+        this.dialogType = null
+        this.dialogUpdate = {}
+        this.toast('更新成功')
       })
     },
     handlerDelDialog(){
       for(let i=this.fileList.length-1; i>=0; i--){
         let item = this.fileList[i]
-        if(this.delFileIds.includes(item.id)){
+        if(this.dialogDelete.includes(item.id)){
           this.fileList.splice(i, 1);
           removeLocal(`cache-${item.id}`)
         }
       }
       setLocal('fileList', this.fileList).then(res => {
         this.dialogType = null
-        this.delFileIds = [];
+        this.dialogDelete = [];
         this.toast('删除成功')
       })
     },
     handlerAddFile(){
-      this.newFileName = ''
-      this.newFilePath = ''
+      this.dialogAdd = {}
       this.dialogType = 'add'
+    },
+    handlerUpdateFile(file){
+      this.dialogUpdate.id = file.id
+      this.dialogUpdate.name = file.name
+      this.dialogUpdate.file = null
+      this.dialogType = 'update'
+    },
+    handlerDeleteFile(file){
+      this.dialogDelete = [file.id];
+      this.dialogType = 'remove';
     },
     handlerSaveFile(){
       setLocal(`cache-${this.id}`, this.renderData).then(res => {
@@ -146,16 +180,12 @@ let vm = new Vue({
     },
     handlerModifyFile(file){
       this.status = -1;
+      this.isShowFile = false;
       this.readerFile(file.id)
-    },
-    handlerDeleteFile(file){
-      this.delFileIds = [file.id];
-      this.dialogType = 'remove';
     },
     handlerBatchDelFile(){
       if(this.checkFile.length>0){
-        this.delFileIds = this.checkFile.map(item => item.id)
-        console.log(this.checkFile)
+        this.dialogDelete = this.checkFile.map(item => item.id)
         this.dialogType = 'remove';
       }else{
         this.toast('至少选中一条数据')
@@ -173,7 +203,7 @@ let vm = new Vue({
     handlerBack(){
       this.id = null
       this.status = 0
-      this.renderName = ''
+      this.renderName = 'render-loadding'
       this.renderData = {}
       this.isShowFile = true;
       this.isShowLog = false;
@@ -227,6 +257,12 @@ let vm = new Vue({
     /** 打印信息  */
     log(msg){
       this.logText += msg + '\n'
+    }
+  },
+  components: {
+    'render-loadding': {
+      name: 'render-loadding',
+      template: '<div>读取数据中...</div>'
     }
   }
 })

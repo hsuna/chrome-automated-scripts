@@ -114,9 +114,15 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
 let reply;
 
 __WEBPACK_IMPORTED_MODULE_0__common_pubsub_js__["a" /* default */].listen(__WEBPACK_IMPORTED_MODULE_0__common_pubsub_js__["a" /* default */].INJECT+'.load', ({ id, code, data }) => {
-  let Reply = new Function(`return ${code}`)()(__WEBPACK_IMPORTED_MODULE_1__module_reply_BaseReply__["a" /* default */])
-  reply = new Reply(id)
-  reply.init(data)
+  try{
+    let Reply = new Function(`return ${code}`)()(__WEBPACK_IMPORTED_MODULE_1__module_reply_BaseReply__["a" /* default */])
+    reply = new Reply(id)
+    reply.init(data)
+  }catch(e){
+    __WEBPACK_IMPORTED_MODULE_0__common_pubsub_js__["a" /* default */].popup('toast', '脚本读取失败')
+    __WEBPACK_IMPORTED_MODULE_0__common_pubsub_js__["a" /* default */].popup('fail')
+    console.log(e)
+  }
 })
 
 __WEBPACK_IMPORTED_MODULE_0__common_pubsub_js__["a" /* default */].listen(__WEBPACK_IMPORTED_MODULE_0__common_pubsub_js__["a" /* default */].INJECT+'.call', ({ name, data }) => {

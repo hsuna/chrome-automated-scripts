@@ -312,6 +312,11 @@
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+.dialog-body .form-group .check-control{
+  line-height: 30px;
+  padding: 0 4px;
+  vertical-align: middle;
+}
 .dialog-footer{
   display: flex;
   border-top: 1px solid #dadada;

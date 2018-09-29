@@ -129,21 +129,26 @@ let vm = new Vue({
 
     isShowFile: true,
     isShowLog: false,
-    dialogType: null,
-
+    
     logText: '',
 
-    newFileName: '',
-    newFilePath: '',
-    newFile: null,
-    delFileIds: [],
+    dialogType: null,
+    dialogAdd: {
+      name: '',
+      file: null
+    },
+    dialogUpdate: {
+      name: '',
+      file: null
+    },
+    dialogDelete: [],
 
     checkFile: [],
     batchFile:[],
     
     fileList: [],
 
-    renderName: '',
+    renderName: 'render-loadding',
     renderData: {}
   },
   created () {
@@ -159,7 +164,6 @@ let vm = new Vue({
       this.id = reply.id
       this.renderData = reply.data
       if(-1 == this.status){
-        this.isShowFile = false;
         this.createRender(reply)
         this.status = 0
       }else if(1 == this.status){
@@ -191,48 +195,78 @@ let vm = new Vue({
   },
   methods: {
     handlerAddDialog(){
-      if('' == this.newFileName){
+      if('' == this.dialogAdd.name){
         return this.toast('脚本名不能为空')
       }
-      if('' == this.newFilePath){
+      if('' == this.dialogAdd.file){
         return this.toast('脚本路径不能为空')
       }
 
       let data = {
         id: uuid(),
-        name: this.newFileName,
-        path: this.newFilePath,
+        name: this.dialogAdd.name
       }
       
-      __WEBPACK_IMPORTED_MODULE_0__common_fs__["a" /* default */].writerFile(data.id, this.newFile).then(res => {
+      __WEBPACK_IMPORTED_MODULE_0__common_fs__["a" /* default */].writerFile(data.id, this.dialogAdd.file).then(res => {
         this.fileList.push(data)
         return Object(__WEBPACK_IMPORTED_MODULE_2__common_storage__["c" /* setLocal */])('fileList', this.fileList)
       }).then(res => {
         this.dialogType = null
-        this.newFile = null
-        this.newFileName = ''
-        this.newFilePath = ''
+        this.dialogAdd = {}
         this.toast('添加成功')
+      })
+    },
+    async handlerUpdateDialog(){
+      if('' == this.dialogUpdate.name){
+        return this.toast('脚本名不能为空')
+      }
+
+      if(this.dialogUpdate.file){
+        await __WEBPACK_IMPORTED_MODULE_0__common_fs__["a" /* default */].updateFile(this.dialogUpdate.id, this.dialogUpdate.file)
+      }
+      
+      this.fileList.every(item => {
+        if(this.dialogUpdate.id == item.id){
+          item.name = this.dialogUpdate.name
+          return false
+        }
+      })
+      if(this.dialogUpdate.checked){
+        Object(__WEBPACK_IMPORTED_MODULE_2__common_storage__["b" /* removeLocal */])(`cache-${this.dialogUpdate.id}`)
+      }
+      Object(__WEBPACK_IMPORTED_MODULE_2__common_storage__["c" /* setLocal */])('fileList', this.fileList).then(res => {
+        this.dialogType = null
+        this.dialogUpdate = {}
+        this.toast('更新成功')
       })
     },
     handlerDelDialog(){
       for(let i=this.fileList.length-1; i>=0; i--){
         let item = this.fileList[i]
-        if(this.delFileIds.includes(item.id)){
+        if(this.dialogDelete.includes(item.id)){
           this.fileList.splice(i, 1);
           Object(__WEBPACK_IMPORTED_MODULE_2__common_storage__["b" /* removeLocal */])(`cache-${item.id}`)
         }
       }
       Object(__WEBPACK_IMPORTED_MODULE_2__common_storage__["c" /* setLocal */])('fileList', this.fileList).then(res => {
         this.dialogType = null
-        this.delFileIds = [];
+        this.dialogDelete = [];
         this.toast('删除成功')
       })
     },
     handlerAddFile(){
-      this.newFileName = ''
-      this.newFilePath = ''
+      this.dialogAdd = {}
       this.dialogType = 'add'
+    },
+    handlerUpdateFile(file){
+      this.dialogUpdate.id = file.id
+      this.dialogUpdate.name = file.name
+      this.dialogUpdate.file = null
+      this.dialogType = 'update'
+    },
+    handlerDeleteFile(file){
+      this.dialogDelete = [file.id];
+      this.dialogType = 'remove';
     },
     handlerSaveFile(){
       Object(__WEBPACK_IMPORTED_MODULE_2__common_storage__["c" /* setLocal */])(`cache-${this.id}`, this.renderData).then(res => {
@@ -259,16 +293,12 @@ let vm = new Vue({
     },
     handlerModifyFile(file){
       this.status = -1;
+      this.isShowFile = false;
       this.readerFile(file.id)
-    },
-    handlerDeleteFile(file){
-      this.delFileIds = [file.id];
-      this.dialogType = 'remove';
     },
     handlerBatchDelFile(){
       if(this.checkFile.length>0){
-        this.delFileIds = this.checkFile.map(item => item.id)
-        console.log(this.checkFile)
+        this.dialogDelete = this.checkFile.map(item => item.id)
         this.dialogType = 'remove';
       }else{
         this.toast('至少选中一条数据')
@@ -286,7 +316,7 @@ let vm = new Vue({
     handlerBack(){
       this.id = null
       this.status = 0
-      this.renderName = ''
+      this.renderName = 'render-loadding'
       this.renderData = {}
       this.isShowFile = true;
       this.isShowLog = false;
@@ -341,6 +371,12 @@ let vm = new Vue({
     log(msg){
       this.logText += msg + '\n'
     }
+  },
+  components: {
+    'render-loadding': {
+      name: 'render-loadding',
+      template: '<div>读取数据中...</div>'
+    }
   }
 })
 
@@ -361,6 +397,20 @@ const fs = {
             window.requestFileSystem(TYPE, SIZE, fs => {
                 fs.root.getFile(name, { create: true, exclusive: true }, entry => {
                     entry.createWriter(writer => {
+                        writer.onwriteend = resolve
+                        writer.onerror = rejects
+                        writer.write(file)
+                    })
+                }, rejects)
+            }, rejects)
+        })
+    },
+    updateFile(name, file){
+        return new Promise((resolve, rejects) => {
+            window.requestFileSystem(TYPE, SIZE, fs => {
+                fs.root.getFile(name, { create: false }, entry => {
+                    entry.createWriter(writer => {
+                        writer.seek(0)
                         writer.onwriteend = resolve
                         writer.onerror = rejects
                         writer.write(file)

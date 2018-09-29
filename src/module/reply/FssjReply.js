@@ -40,9 +40,16 @@ module.exports = BaseReply => class FssjReply extends BaseReply{
     }
     async renderer(){
         let { channels } = await this.getChannels()
+        let channelIds = Object.keys(channels)
         return {
             data: {
-                checks: Object.keys(channels),
+                list: channelIds.map(id => { 
+                    return {
+                        id, 
+                        text: channels[id].alias
+                    }
+                }),
+                checks: channelIds,
                 value: ''
             },
             style: `
@@ -73,7 +80,7 @@ module.exports = BaseReply => class FssjReply extends BaseReply{
     async selectReply(){
         if(this.isStop) return;
         if(!this.data.value){
-            this.toast('回复信息不能为空！')
+            this.fail('回复信息不能为空！')
             return;
         }
 
@@ -100,9 +107,9 @@ module.exports = BaseReply => class FssjReply extends BaseReply{
             if(res.success == true){
                 $tr.remove();
                 $('.bootbox.fade.in').remove();
-                this.toast('回复成功！')
+                this.log('回复成功！')
             }else{
-                this.toast(JSON.stringify(res))
+                this.log(JSON.stringify(res))
             }
             this.selectReply();
         })

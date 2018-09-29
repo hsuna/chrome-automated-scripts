@@ -25,8 +25,9 @@
 								{{file.name}}
 							</label>
 							<a href="javascript:;" @click="handlerRunFile(file)">[运行]</a>
-							<a href="javascript:;" @click="handlerModifyFile(file)">[修改]</a>
-							<a href="javascript:;" @click="handlerDeleteFile(file)">[删除]</a>
+							<a href="javascript:;" @click="handlerModifyFile(file)">[配置]</a>
+							<a href="javascript:;" @click="handlerUpdateFile(file)">[更新]</a>
+							<a href="javascript:;" @click="handlerDeleteFile(file)" :style="{color: 'red'}">[删除]</a>
 						</li>
 					</ul>
 				</div>
@@ -73,8 +74,11 @@
 				<textarea v-model="logText" class="form-control" readonly="readonly"></textarea>
 			</div>
 			<div class="btn-group">
-				<button id="clearBtn" type="button" class="btn pull-left" @click="logText=''">清空</button>
-				<button id="closeLogBtn" type="button" class="btn"  @click="isShowLog=false">关闭</button>
+				<div class="pull-left">
+					<button type="button" class="btn" @click="logText=''">清空</button>
+					<!-- <button type="button" @click="handlerTestFile">测试</button> -->
+				</div>
+				<button type="button" class="btn" @click="isShowLog=false">关闭</button>
 			</div>
 		</div>
 		<div class="dialog-mask" v-if="dialogType">
@@ -83,11 +87,11 @@
 				<div class="dialog-body">
 					<div class="form-group">
 						<label>脚本名：</label>
-						<input type="text" class="form-control" v-model="newFileName" />
+						<input type="text" class="form-control" v-model="dialogAdd.name" />
 					</div>
 					<div class="form-group">
 						<label>脚本路径：</label>
-						<input type="file" class="form-control" v-model="newFilePath" @change="newFile=$event.target.files[0]" />
+						<input type="file" class="form-control" v-model="dialogAdd.path" @change="dialogAdd.file=$event.target.files[0]" />
 					</div>
 				</div>
 				<div class="dialog-footer">
@@ -95,15 +99,38 @@
 					<button type="button" class="btn" @click="dialogType=null">取消</button>
 				</div>
 			</div>
+			<div class="dialog-wrap" v-if="'update' == dialogType">
+				<div class="dialog-header">更新脚本</div>
+				<div class="dialog-body">
+					<div class="form-group">
+						<label>脚本名：</label>
+						<input type="text" class="form-control" v-model="dialogUpdate.name"/>
+					</div>
+					<div class="form-group">
+						<label>脚本路径：</label>
+						<input type="file" class="form-control" v-model="dialogUpdate.path" @change="dialogUpdate.file=$event.target.files[0]" />
+					</div>
+					<div class="form-group">
+						<label>清除缓存：</label>
+						<div class="check-control">
+							<input type="checkbox" v-model="dialogUpdate.checked"/>
+						</div>
+					</div>
+				</div>
+				<div class="dialog-footer">
+					<button type="button" class="btn" @click="handlerUpdateDialog">确定</button>
+					<button type="button" class="btn" @click="dialogType=null">取消</button>
+				</div>
+			</div>
 			<div class="dialog-wrap" v-if="'remove' == dialogType">
 				<div class="dialog-header">提示</div>
 				<div class="dialog-text">
-					<span v-if="delFileIds.length>1">确定删除选中的{{delFileIds.length}}个脚本吗?</span>
-					<span v-if="delFileIds.length==1">确定删除脚本【{{getFileNameById(delFileIds[0])}}】吗?</span>
+					<span v-if="dialogDelete.length>1">确定删除选中的{{dialogDelete.length}}个脚本吗?</span>
+					<span v-if="dialogDelete.length==1">确定删除脚本【{{getFileNameById(dialogDelete[0])}}】吗?</span>
 				</div>
 				<div class="dialog-footer">
 					<button type="button" class="btn" @click="handlerDelDialog">确定</button>
-					<button type="button" class="btn" @click="dialogType=null;delFileIds=[];">取消</button>
+					<button type="button" class="btn" @click="dialogType=null;dialogDelete=[];">取消</button>
 				</div>
 			</div>
 		</div>
