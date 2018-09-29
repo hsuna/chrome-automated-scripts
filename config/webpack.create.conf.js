@@ -13,6 +13,12 @@ module.exports = {
   },
   plugins: [
     new UglifyJsPlugin({
+      uglifyOptions: {
+        compress: {
+          sequences     : false,  // join consecutive statemets with the “comma operator”
+          side_effects  : false,  // drop side-effect-free statements
+        },
+      },
       sourceMap: false
     }),
     new CleanWebpackPlugin(['./scripts'])

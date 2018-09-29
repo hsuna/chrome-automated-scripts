@@ -163,7 +163,7 @@ let vm = new Vue({
     handlerStopFile(){
       PS.inject('call', { name:'stop' })
       this.toast('已暂停')
-      this.fileBatch = []
+      this.batchFile = []
       this.status = 0
     },
     handlerRunFile(file){
@@ -193,8 +193,8 @@ let vm = new Vue({
     },
     handlerBatchRunFile(){
       if(this.checkFile.length>0){
-        this.fileBatch = [...this.checkFile];
-        let file = this.fileBatch.shift()
+        this.batchFile = [...this.checkFile];
+        let file = this.batchFile.shift()
         this.handlerRunFile(file)
       }else{
         this.toast('至少选中一条数据')
@@ -214,8 +214,8 @@ let vm = new Vue({
     },
     handlerComplete(){
       this.status = 0
-      if(this.fileBatch.length>0) {
-        let file = this.fileBatch.shift()
+      if(this.batchFile.length>0) {
+        let file = this.batchFile.shift()
         this.handlerRunFile(file)
       }
     },

@@ -5,7 +5,7 @@ let script;
 
 PS.listen(PS.INJECT+'.load', ({ id, code, data }) => {
   try{
-    let SubScript = new Function(`return ${code}`)()(BaseScript)
+    let SubScript = new Function(`return ${code.replace(/^[\+\-\*\/\!]*(function)/, "$1")}`)()(BaseScript)
     script = new SubScript(id)
     script.init(data)
   }catch(e){
