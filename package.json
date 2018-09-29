@@ -1,5 +1,5 @@
 {
-  "name": "tf-20180925-chrome-reply",
+  "name": "chrome_popup_template",
   "version": "1.0.0",
   "description": "",
   "author": "chenyangzhi <chenyangzhi@3k.com>",
@@ -7,11 +7,12 @@
   "scripts": {
     "start": "npm run dev",
     "dev": "webpack --watch --config config/webpack.dev.conf.js",
-    "build": "set NODE_ENV=production && webpack --config config/webpack.prod.conf.js"
+    "build": "set NODE_ENV=production && webpack --config config/webpack.prod.conf.js",
+    "create": "webpack --watch --config config/webpack.create.conf.js"
   },
   "repository": {
     "type": "git",
-    "url": "http://git.3k.com/web/tf-20180925-chrome-reply.git"
+    "url": "http://git.3k.com/web/Tech/chrome_popup_template.git"
   },
   "license": "ISC",
   "devDependencies": {

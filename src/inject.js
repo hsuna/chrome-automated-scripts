@@ -1,13 +1,13 @@
-import PS from "./common/pubsub.js"
-import BaseReply from './module/reply/BaseReply'
+import PS from "./common/pubsub"
+import BaseScript from './module/BaseScript'
 
-let reply;
+let script;
 
 PS.listen(PS.INJECT+'.load', ({ id, code, data }) => {
   try{
-    let Reply = new Function(`return ${code}`)()(BaseReply)
-    reply = new Reply(id)
-    reply.init(data)
+    let SubScript = new Function(`return ${code}`)()(BaseScript)
+    script = new SubScript(id)
+    script.init(data)
   }catch(e){
     PS.popup('toast', '脚本读取失败')
     PS.popup('fail')
@@ -16,7 +16,7 @@ PS.listen(PS.INJECT+'.load', ({ id, code, data }) => {
 })
 
 PS.listen(PS.INJECT+'.call', ({ name, data }) => {
-  reply && reply[Symbol.for(name)](data);
+  script && script[Symbol.for(name)](data);
 })
 
 PS.popup('inject')

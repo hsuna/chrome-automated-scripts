@@ -1,4 +1,4 @@
-module.exports = BaseReply => class FssjReply extends BaseReply{
+module.exports = BaseScript => class FssjReply extends BaseScript{
     constructor(id){
         super(id)
         this.name = '风色世界'

@@ -63,8 +63,9 @@
 /******/ 	return __webpack_require__(__webpack_require__.s = 2);
 /******/ })
 /************************************************************************/
-/******/ ([
-/* 0 */
+/******/ ({
+
+/***/ 0:
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -100,39 +101,8 @@ const Pubsub = {
 /* harmony default export */ __webpack_exports__["a"] = (Pubsub);
 
 /***/ }),
-/* 1 */,
-/* 2 */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
 
-"use strict";
-Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__common_pubsub_js__ = __webpack_require__(0);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__module_reply_BaseReply__ = __webpack_require__(3);
-
-
-
-let reply;
-
-__WEBPACK_IMPORTED_MODULE_0__common_pubsub_js__["a" /* default */].listen(__WEBPACK_IMPORTED_MODULE_0__common_pubsub_js__["a" /* default */].INJECT+'.load', ({ id, code, data }) => {
-  try{
-    let Reply = new Function(`return ${code}`)()(__WEBPACK_IMPORTED_MODULE_1__module_reply_BaseReply__["a" /* default */])
-    reply = new Reply(id)
-    reply.init(data)
-  }catch(e){
-    __WEBPACK_IMPORTED_MODULE_0__common_pubsub_js__["a" /* default */].popup('toast', '脚本读取失败')
-    __WEBPACK_IMPORTED_MODULE_0__common_pubsub_js__["a" /* default */].popup('fail')
-    console.log(e)
-  }
-})
-
-__WEBPACK_IMPORTED_MODULE_0__common_pubsub_js__["a" /* default */].listen(__WEBPACK_IMPORTED_MODULE_0__common_pubsub_js__["a" /* default */].INJECT+'.call', ({ name, data }) => {
-  reply && reply[Symbol.for(name)](data);
-})
-
-__WEBPACK_IMPORTED_MODULE_0__common_pubsub_js__["a" /* default */].popup('inject')
-
-/***/ }),
-/* 3 */
+/***/ 10:
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -217,5 +187,38 @@ class BaseReply{
 /* harmony export (immutable) */ __webpack_exports__["a"] = BaseReply;
 
 
+/***/ }),
+
+/***/ 2:
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__common_pubsub__ = __webpack_require__(0);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__module_BaseScript__ = __webpack_require__(10);
+
+
+
+let script;
+
+__WEBPACK_IMPORTED_MODULE_0__common_pubsub__["a" /* default */].listen(__WEBPACK_IMPORTED_MODULE_0__common_pubsub__["a" /* default */].INJECT+'.load', ({ id, code, data }) => {
+  try{
+    let SubScript = new Function(`return ${code}`)()(__WEBPACK_IMPORTED_MODULE_1__module_BaseScript__["a" /* default */])
+    script = new SubScript(id)
+    script.init(data)
+  }catch(e){
+    __WEBPACK_IMPORTED_MODULE_0__common_pubsub__["a" /* default */].popup('toast', '脚本读取失败')
+    __WEBPACK_IMPORTED_MODULE_0__common_pubsub__["a" /* default */].popup('fail')
+    console.log(e)
+  }
+})
+
+__WEBPACK_IMPORTED_MODULE_0__common_pubsub__["a" /* default */].listen(__WEBPACK_IMPORTED_MODULE_0__common_pubsub__["a" /* default */].INJECT+'.call', ({ name, data }) => {
+  script && script[Symbol.for(name)](data);
+})
+
+__WEBPACK_IMPORTED_MODULE_0__common_pubsub__["a" /* default */].popup('inject')
+
 /***/ })
-/******/ ]);
+
+/******/ });

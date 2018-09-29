@@ -1,4 +1,4 @@
-import PS from "../../common/pubsub"
+import PS from "../common/pubsub"
 
 const _start = Symbol.for('start')
 const _continue = Symbol.for('continue')
