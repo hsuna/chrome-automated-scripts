@@ -9,12 +9,12 @@ glob.sync('./src/script/*.js').map(filepath => entry[path.basename(filepath, '.j
 module.exports = {
   entry,
   output: {
-    filename: "./script/js/[name].js"
+    filename: "./scripts/[name].js"
   },
   plugins: [
     new UglifyJsPlugin({
       sourceMap: false
     }),
-    new CleanWebpackPlugin(['./script'])
+    new CleanWebpackPlugin(['./scripts'])
   ]
 }

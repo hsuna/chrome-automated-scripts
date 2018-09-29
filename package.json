@@ -8,7 +8,7 @@
     "start": "npm run dev",
     "dev": "webpack --watch --config config/webpack.dev.conf.js",
     "build": "set NODE_ENV=production && webpack --config config/webpack.prod.conf.js",
-    "create": "webpack --watch --config config/webpack.create.conf.js"
+    "create": "webpack --config config/webpack.create.conf.js"
   },
   "repository": {
     "type": "git",
