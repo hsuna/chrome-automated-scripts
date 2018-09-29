@@ -120,7 +120,7 @@ __WEBPACK_IMPORTED_MODULE_0__common_pubsub_js__["a" /* default */].listen(__WEBP
 })
 
 __WEBPACK_IMPORTED_MODULE_0__common_pubsub_js__["a" /* default */].listen(__WEBPACK_IMPORTED_MODULE_0__common_pubsub_js__["a" /* default */].INJECT+'.call', ({ name, data }) => {
-  reply && reply[name](data);
+  reply && reply[Symbol.for(name)](data);
 })
 
 __WEBPACK_IMPORTED_MODULE_0__common_pubsub_js__["a" /* default */].popup('inject')
@@ -133,61 +133,66 @@ __WEBPACK_IMPORTED_MODULE_0__common_pubsub_js__["a" /* default */].popup('inject
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__common_pubsub__ = __webpack_require__(0);
 
 
+const _start = Symbol.for('start')
+const _continue = Symbol.for('continue')
+const _stop = Symbol.for('stop')
+
 class BaseReply{
     constructor(id){
         this.id = id
-        this.isStop = true
-        this.cacheData = null
-        this.storageData = null
-        this.init();
+        this.isStop = false
     }
-    async init(data){
-        let reply = {
-            id: this.id,
-            data: data || await this.data(),
-            style: await this.style(),
-            template: await this.template()
-        }
-        __WEBPACK_IMPORTED_MODULE_0__common_pubsub__["a" /* default */].popup('init', reply)
-    }
-    async start(data){
-        this.isStop = false;
-        this.cacheData = this.parseData(data);
-        __WEBPACK_IMPORTED_MODULE_0__common_pubsub__["a" /* default */].popup('cache', this.cacheData)
+    async [_start](data){
+        this.isStop = false
+        this.data = this.parse(data)
+        this.save()
         //运行数据
-        this.toast('自动回复开始，请勿操作');
+        this.toast('自动回复开始，请勿操作')
+        this.run()
+    }
+    async [_continue](){
+        this.data = JSON.parse(window.sessionStorage.getItem(this.id) || '{}');
         this.run();
     }
-    async continue(cache){
-        this.cacheData = cache;
-        this.run();
-    }
-    async stop(){
+    async [_stop](){
         this.isStop = true;
     }
+    /** 渲染器接口 */
+    async renderer(){
+        return {
+            data: '',
+            style: '',
+            template: '',
+        }
+    }
 
-    async data(){
-        return {}
+    /**-暴露- */
+    async init(data){
+        let res = await this.renderer()
+        res.data = data || res.data
+        let reply = Object.assign({
+            id: this.id
+        }, res)
+
+        __WEBPACK_IMPORTED_MODULE_0__common_pubsub__["a" /* default */].popup('init', reply)
     }
-    async style(){
-        return ''
-    }
-    async template(){
-        return ''
-    }
+    
     run(){
 
     }
-    complete(){
-        this.toast('自动回复完成')
-        __WEBPACK_IMPORTED_MODULE_0__common_pubsub__["a" /* default */].popup('cache', this.cacheData);
+    complete(msg='自动回复完成'){
+        this.isStop = true;
+        this.toast(msg)
+        __WEBPACK_IMPORTED_MODULE_0__common_pubsub__["a" /* default */].popup('complete')
     }
-    cache(){
-        __WEBPACK_IMPORTED_MODULE_0__common_pubsub__["a" /* default */].popup('cache', this.cacheData);
-    }
-    parseData(data){
+    parse(data){
         return data;
     }
+    save(){
+        return window.sessionStorage.setItem(this.id, JSON.stringify(this.data || {}))
+    }
+
+    /** 共用方法 */
     sleep(t){
         return new Promise(r => setTimeout(r, t || 1000))
     }

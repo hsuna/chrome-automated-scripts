@@ -1,60 +1,65 @@
 import PS from "../../common/pubsub"
 
+const _start = Symbol.for('start')
+const _continue = Symbol.for('continue')
+const _stop = Symbol.for('stop')
+
 export default class BaseReply{
     constructor(id){
         this.id = id
-        this.isStop = true
-        this.cacheData = null
-        this.storageData = null
-        this.init();
+        this.isStop = false
     }
-    async init(data){
-        let reply = {
-            id: this.id,
-            data: data || await this.data(),
-            style: await this.style(),
-            template: await this.template()
-        }
-        PS.popup('init', reply)
-    }
-    async start(data){
-        this.isStop = false;
-        this.cacheData = this.parseData(data);
-        PS.popup('cache', this.cacheData)
+    async [_start](data){
+        this.isStop = false
+        this.data = this.parse(data)
+        this.save()
         //运行数据
-        this.toast('自动回复开始，请勿操作');
+        this.toast('自动回复开始，请勿操作')
+        this.run()
+    }
+    async [_continue](){
+        this.data = JSON.parse(window.sessionStorage.getItem(this.id) || '{}');
         this.run();
     }
-    async continue(cache){
-        this.cacheData = cache;
-        this.run();
-    }
-    async stop(){
+    async [_stop](){
         this.isStop = true;
     }
+    /** 渲染器接口 */
+    async renderer(){
+        return {
+            data: '',
+            style: '',
+            template: '',
+        }
+    }
 
-    async data(){
-        return {}
+    /**-暴露- */
+    async init(data){
+        let res = await this.renderer()
+        res.data = data || res.data
+        let reply = Object.assign({
+            id: this.id
+        }, res)
+
+        PS.popup('init', reply)
     }
-    async style(){
-        return ''
-    }
-    async template(){
-        return ''
-    }
+    
     run(){
 
     }
-    complete(){
-        this.toast('自动回复完成')
-        PS.popup('cache', this.cacheData);
+    complete(msg='自动回复完成'){
+        this.isStop = true;
+        this.toast(msg)
+        PS.popup('complete')
     }
-    cache(){
-        PS.popup('cache', this.cacheData);
-    }
-    parseData(data){
+    parse(data){
         return data;
     }
+    save(){
+        return window.sessionStorage.setItem(this.id, JSON.stringify(this.data || {}))
+    }
+
+    /** 共用方法 */
     sleep(t){
         return new Promise(r => setTimeout(r, t || 1000))
     }

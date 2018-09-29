@@ -28,8 +28,8 @@ let vm = new Vue({
 
     fileList: [],
 
-    renderData: {},
-    renderCache: null
+    renderName: '',
+    renderData: {}
   },
   created () {
     getLocal('fileList').then(res => {
@@ -37,31 +37,28 @@ let vm = new Vue({
     })
 
     PS.listen(PS.POPUP+'.inject', () => {
-      if(this.id) readerFile(this.id)
+      if(this.id) this.readerFile(this.id)
     })
 
     PS.listen(PS.POPUP+'.init', reply => {
-      this.id = reply.id,
-      this.renderData = res || reply.data
+      this.id = reply.id
+      this.renderData = reply.data
+      console.log(reply)
       if(99 == this.status){
         this.isShowFile = false;
-        this.createRender(reply.id, reply.template)
+        this.createRender(reply)
+        this.status = 0
       }else if(1 == this.status){
         PS.inject('call', { name:'start', data: this.renderData })
+        this.status = 2;
       }else if(2 == this.status){
-        PS.inject('call', { name:'continue', data: this.renderCache })
+        PS.inject('call', { name:'continue' })
       }
     })
 
     /** 监听运行完成  */
     PS.listen(PS.POPUP+'.complete', data => {
       this.status = 0
-      this.renderCache = null
-    })
-
-    /** 监听缓存数据  */
-    PS.listen(PS.POPUP+'.cache', data => {
-      this.renderCache = data;
     })
 
     /** 监听提示信息  */
@@ -70,17 +67,13 @@ let vm = new Vue({
     /** 监听打印信息  */
     PS.listen(PS.POPUP+'.log', msg => this.log(msg))
   },
-  mounted () {
-    /** 通知内容页-插件启动  */
-    //PS.inject('init')
-  },
   methods: {
     handlerAddDialog(){
       if('' == this.newFileName){
-        return this.toast('文件名不能为空')
+        return this.toast('脚本名不能为空')
       }
       if('' == this.newFilePath){
-        return this.toast('文件路径不能为空')
+        return this.toast('脚本路径不能为空')
       }
 
       let data = {
@@ -124,16 +117,17 @@ let vm = new Vue({
       })
     },
     handlerStopFile(){
-      this.status = 3;
+      this.status = 0;
       this.toast('已暂停')
     },
     handlerRunFile(file){
-      if(3 == this.status){
-        PS.inject('call', { name:'continue', data: this.renderCache })
-      }else{
-        this.status = 1;
+      if(file){
+        this.status = 1
         this.readerFile(file.id)
-        this.handlerSaveFile(file)
+      }else{
+        this.status = 2
+        setLocal(`cache-${file.id}`, this.renderData)
+        PS.inject('call', { name:'start', data: this.renderData })
       }
     },
     handlerModifyFile(file){
@@ -169,6 +163,10 @@ let vm = new Vue({
       }
     },
     handlerBack(){
+      this.id = null
+      this.status = 0
+      this.renderName = ''
+      this.renderData = {}
       this.isShowFile = true;
       this.isShowLog = false;
     },
@@ -177,17 +175,21 @@ let vm = new Vue({
       popup.close()
     },
 
-    createRender(name, template) {
+    createRender(data) {
+      let renderName = 'component_'+data.id;
       let renderComponent = Vue.extend({
-        name,
+        name: renderName,
         props: ['data'],
-        template
+        template: `<div>${data.template}</div>`
       })
-      Vue.component(name, renderComponent);
+      Vue.component(renderName, renderComponent);
+      document.getElementById('renderStyle').innerHTML = data.style;
+      this.renderName = renderName;
     },
     readerFile(id){
-      getLocal(`cache-${reply.id}`).then(data => {
-        fs.readerFile(file.id).then(res => {
+      getLocal(`cache-${id}`).then(data => {
+        fs.readerFile(id).then(res => {
+          this.id = id
           let reader = new FileReader();
           reader.onloadend = _=> PS.inject('load', { id, data, code: reader.result })
           reader.readAsText(res);

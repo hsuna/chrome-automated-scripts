@@ -72,51 +72,67 @@ module.exports = Reply => class XcqyReply extends Reply{
     constructor(id){
         super(id)
         this.name = '星辰奇缘'
-        this.curData = null
+        this.curItem = null
     }
     async init(data){
         if(-1 == window.location.href.indexOf('m=SMP_GM_Feedback')){
-            window.location.href = '//smp.xc2016.shiyuegame.com/?m=SMP_GM_Feedback'
+            window.location.href = 'http://smp.xc2016.shiyuegame.com/?m=SMP_GM_Feedback'
+        }else if($('#loginform').length>0){
+            this.complete('请登录成功后，再操作');
         }else{
             super.init(data);
         }
     }
     run(){
-        if(this.cacheData &&  this.cacheData.length > 0){
-            let item = this.curData = this.cacheData[0];
+        if(this.data &&  this.data.length > 0){
+            let item = this.curItem = this.data[0];
             this.selectChannel(item.id)
         }else{
             this.complete();
         }
     }
-    async data(){
+    async renderer(){
         let { channels } = await this.getChannels()
         return {
-            checks: channels.map(item => item.id),
-            value: '',
-            list: channels.map(item => ({
-                id: item.id,
-                text: item.text,
-                checked: true,
-                value: ''
-            }))
+            data: {
+                checks: channels.map(item => item.id),
+                value: '',
+                list: channels.map(item => ({
+                    id: item.id,
+                    text: item.text,
+                    checked: false,
+                    value: ''
+                }))
+            },
+            style: `
+                .popup-renderer h4{margin-bottom:5px;padding-bottom:5px;border-bottom:1px solid #DADADA;font-size:14px;}
+                .popup-renderer .checkbox-group{padding:5px;font-size:14px;}
+                .popup-renderer .checkbox-group label{display:inline-block;margin-right:10px;margin-bottom:2px;}
+                .popup-renderer .checkbox-group [type="checkbox"]{margin-right:4px;}
+                .popup-renderer .textarea-group{padding:4px;}
+                .popup-renderer .textarea-group textarea{overflow-y:auto;width:100%;font-size:14px;font-family:Arial;}
+                .popup-renderer .form-group{display:-webkit-flex;display:flex;margin-bottom:10px;font-size:14px;}
+                .popup-renderer .form-group label{display:block;line-height:30px;padding-right:10px;text-align:right;}
+                .popup-renderer .form-group label span{display:inline-block;width:100px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;vertical-align:middle;}
+                .popup-renderer .form-group label [type="checkbox"]{margin-left:6px;vertical-align:middle;}
+                .popup-renderer .form-control{overflow:hidden;-webkit-flex:1;flex:1;height:30px;line-height:30px;padding:0 4px;border:1px solid #dadada;border-radius:3px;text-overflow:ellipsis;white-space:nowrap;}
+                .popup-renderer textarea.form-control{height:80px;line-height:1.5;resize:none;white-space:inherit;}
+            `,
+            template: `
+                <h4>统一回复：</h4>
+                <div class="checkbox-group">
+                    <label v-for="item in data.list"><input type="checkbox" :value="item.id" v-model="data.checks" />{{item.text}}</label>
+                </div>
+                <div class="textarea-group"><textarea class="form-control" v-model="data.value"></textarea></div>
+                <h4 style="margin-top: 20px; margin-bottom: 10px;">个性化回复：</h4>
+                <div class="form-group" v-for="item in data.list">
+                    <label :title="item.text"><span>{{item.text}}</span><input type="checkbox" class="form-checkbox" v-model="item.checked"} /></label>
+                    <input type="text" class="form-control" v-model="item.value" />
+                </div>
+            `
         }
     }
-    async template(){
-        return  `
-            <h4>统一回复：</h4>
-            <div class="checkbox-group">
-                <label v-for="item in data.list"><input type="checkbox" :value="item.id" v-model="data.checks" />{{item.text}}</label>
-            </div>
-            <div class="textarea-group"><textarea class="form-control" v-model="data.value"></textarea></div>
-            <h4 style="margin-top: 20px; margin-bottom: 10px;">个性化回复：</h4>
-            <div class="form-group" v-for="item in data.list">
-                <label :title="item.text"><span>{{item.text}}</span><input type="checkbox" class="form-checkbox" v-model="item.checked"} /></label>
-                <input type="text" class="form-control" v-model="item.value" />
-            </div>
-        `;
-    }
-    parseData(data){
+    parse(data){
         let inputs = {};
         data.checks.forEach(id => {
           inputs[id] = {
@@ -142,6 +158,7 @@ module.exports = Reply => class XcqyReply extends Reply{
         })
     }
     selectChannel(id){
+        console.log('selectChannel', id)
         if(0 == $('[name="status"]').val() && id == $('[name="group_id"]:checked').val()){//已经选中
             this.selectReply();
         }else{
@@ -157,9 +174,9 @@ module.exports = Reply => class XcqyReply extends Reply{
         if($next.length > 0){
             $next.click();
         }else{
-            this.cacheData.shift();
-            this.cache();
-            this.run();
+            this.data.shift()
+            this.save()
+            this.run()
         }
     }
     selectReply(){
@@ -171,14 +188,14 @@ module.exports = Reply => class XcqyReply extends Reply{
             let id = $reply.attr('onclick').replace(/[\s\S]*\(\'([^']*)[\s\S]*/, '$1')
             $reply.addClass('ignore')//执行过回复的加入忽略
             
-            if(!this.curData.value){
+            if(!this.curItem.value){
                 this.toast('回复信息不能为空！')
                 this.selectReply();
             }else{
                 $.get('?m=SMP_GM_ReplyFeedback&id=' + id, html => {
                     $('#js_reply_body').remove();
                     $('<span id="js_reply_body" style="position: relative;left:0;"> V</span>').append(html).appendTo($reply.parent());
-                    $('#js_reply').val(this.curData.value);
+                    $('#js_reply').val(this.curItem.value);
                     this.submitReply();
                 });
             }
@@ -187,6 +204,7 @@ module.exports = Reply => class XcqyReply extends Reply{
         }
     }
     submitReply(){
+        
         let $form = $('#js_reply_form')
         $.getJSON($form.attr('action'), $form.serialize(), data => {
             if(!data.error) {

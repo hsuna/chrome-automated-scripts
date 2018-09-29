@@ -10,7 +10,7 @@ PS.listen(PS.INJECT+'.load', ({ id, code, data }) => {
 })
 
 PS.listen(PS.INJECT+'.call', ({ name, data }) => {
-  reply && reply[name](data);
+  reply && reply[Symbol.for(name)](data);
 })
 
 PS.popup('inject')

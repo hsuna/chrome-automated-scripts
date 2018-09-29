@@ -3,8 +3,10 @@
 <head>
 	<meta charset="UTF-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<meta http-equiv="Content-Security-Policy" content="default-src *; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline' 'unsafe-eval'">
 
 	<link rel="stylesheet" href="/css/popup.css">
+	<style id="renderStyle"></style>
 </head>
 <body>
 	<div id="app">
@@ -29,7 +31,7 @@
 					</ul>
 				</div>
 				<div v-else class="popup-renderer">
-					<component :is="id"></component>
+					<component :is="renderName" :data="renderData"></component>
 				</div>
 			</div>
 			<div class="popup-footer">
@@ -40,7 +42,7 @@
 				</div>
 				<div v-else class="pull-left">
 					<button type="button" class="btn" @click="handlerSaveFile">保存</button>
-					<button type="button" class="btn" @click="handlerRunFile">{{status=1'运行':'停止'}}</button>
+					<button type="button" class="btn" @click="handlerRunFile()">{{0==status?'运行':'停止'}}</button>
 				</div>
 				<button type="button" class="btn" @click="isShowLog=true">打印信息</button>
 			</div>
@@ -60,11 +62,11 @@
 				<div class="dialog-header">新增脚本</div>
 				<div class="dialog-body">
 					<div class="form-group">
-						<label>文件名：</label>
+						<label>脚本名：</label>
 						<input type="text" class="form-control" v-model="newFileName" />
 					</div>
 					<div class="form-group">
-						<label>文件路径：</label>
+						<label>脚本路径：</label>
 						<input type="file" class="form-control" v-model="newFilePath" @change="newFile=$event.target.files[0]" />
 					</div>
 				</div>
@@ -76,8 +78,8 @@
 			<div class="dialog-wrap" v-if="'remove' == dialogType">
 				<div class="dialog-header">提示</div>
 				<div class="dialog-text">
-					<span v-if="delFileIds.length>1">确定删除选中的{{delFileIds.length}}个文件吗?</span>
-					<span v-if="delFileIds.length==1">确定文件【{{getFileNameById(delFileIds[0])}}】吗?</span>
+					<span v-if="delFileIds.length>1">确定删除选中的{{delFileIds.length}}个脚本吗?</span>
+					<span v-if="delFileIds.length==1">确定删除脚本【{{getFileNameById(delFileIds[0])}}】吗?</span>
 				</div>
 				<div class="dialog-footer">
 					<button type="button" class="btn" @click="handlerDelDialog">确定</button>

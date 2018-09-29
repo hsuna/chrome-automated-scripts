@@ -141,8 +141,8 @@ let vm = new Vue({
 
     fileList: [],
 
-    renderData: {},
-    renderCache: null
+    renderName: '',
+    renderData: {}
   },
   created () {
     Object(__WEBPACK_IMPORTED_MODULE_2__common_storage__["a" /* getLocal */])('fileList').then(res => {
@@ -150,31 +150,28 @@ let vm = new Vue({
     })
 
     __WEBPACK_IMPORTED_MODULE_1__common_pubsub__["a" /* default */].listen(__WEBPACK_IMPORTED_MODULE_1__common_pubsub__["a" /* default */].POPUP+'.inject', () => {
-      if(this.id) readerFile(this.id)
+      if(this.id) this.readerFile(this.id)
     })
 
     __WEBPACK_IMPORTED_MODULE_1__common_pubsub__["a" /* default */].listen(__WEBPACK_IMPORTED_MODULE_1__common_pubsub__["a" /* default */].POPUP+'.init', reply => {
-      this.id = reply.id,
-      this.renderData = res || reply.data
+      this.id = reply.id
+      this.renderData = reply.data
+      console.log(reply)
       if(99 == this.status){
         this.isShowFile = false;
-        this.createRender(reply.id, reply.template)
+        this.createRender(reply)
+        this.status = 0
       }else if(1 == this.status){
         __WEBPACK_IMPORTED_MODULE_1__common_pubsub__["a" /* default */].inject('call', { name:'start', data: this.renderData })
+        this.status = 2;
       }else if(2 == this.status){
-        __WEBPACK_IMPORTED_MODULE_1__common_pubsub__["a" /* default */].inject('call', { name:'continue', data: this.renderCache })
+        __WEBPACK_IMPORTED_MODULE_1__common_pubsub__["a" /* default */].inject('call', { name:'continue' })
       }
     })
 
     /** 监听运行完成  */
     __WEBPACK_IMPORTED_MODULE_1__common_pubsub__["a" /* default */].listen(__WEBPACK_IMPORTED_MODULE_1__common_pubsub__["a" /* default */].POPUP+'.complete', data => {
       this.status = 0
-      this.renderCache = null
-    })
-
-    /** 监听缓存数据  */
-    __WEBPACK_IMPORTED_MODULE_1__common_pubsub__["a" /* default */].listen(__WEBPACK_IMPORTED_MODULE_1__common_pubsub__["a" /* default */].POPUP+'.cache', data => {
-      this.renderCache = data;
     })
 
     /** 监听提示信息  */
@@ -183,17 +180,13 @@ let vm = new Vue({
     /** 监听打印信息  */
     __WEBPACK_IMPORTED_MODULE_1__common_pubsub__["a" /* default */].listen(__WEBPACK_IMPORTED_MODULE_1__common_pubsub__["a" /* default */].POPUP+'.log', msg => this.log(msg))
   },
-  mounted () {
-    /** 通知内容页-插件启动  */
-    //PS.inject('init')
-  },
   methods: {
     handlerAddDialog(){
       if('' == this.newFileName){
-        return this.toast('文件名不能为空')
+        return this.toast('脚本名不能为空')
       }
       if('' == this.newFilePath){
-        return this.toast('文件路径不能为空')
+        return this.toast('脚本路径不能为空')
       }
 
       let data = {
@@ -237,16 +230,17 @@ let vm = new Vue({
       })
     },
     handlerStopFile(){
-      this.status = 3;
+      this.status = 0;
       this.toast('已暂停')
     },
     handlerRunFile(file){
-      if(3 == this.status){
-        __WEBPACK_IMPORTED_MODULE_1__common_pubsub__["a" /* default */].inject('call', { name:'continue', data: this.renderCache })
-      }else{
-        this.status = 1;
+      if(file){
+        this.status = 1
         this.readerFile(file.id)
-        this.handlerSaveFile(file)
+      }else{
+        this.status = 2
+        Object(__WEBPACK_IMPORTED_MODULE_2__common_storage__["b" /* setLocal */])(`cache-${file.id}`, this.renderData)
+        __WEBPACK_IMPORTED_MODULE_1__common_pubsub__["a" /* default */].inject('call', { name:'start', data: this.renderData })
       }
     },
     handlerModifyFile(file){
@@ -282,6 +276,10 @@ let vm = new Vue({
       }
     },
     handlerBack(){
+      this.id = null
+      this.status = 0
+      this.renderName = ''
+      this.renderData = {}
       this.isShowFile = true;
       this.isShowLog = false;
     },
@@ -290,17 +288,21 @@ let vm = new Vue({
       popup.close()
     },
 
-    createRender(name, template) {
+    createRender(data) {
+      let renderName = 'component_'+data.id;
       let renderComponent = Vue.extend({
-        name,
+        name: renderName,
         props: ['data'],
-        template
+        template: `<div>${data.template}</div>`
       })
-      Vue.component(name, renderComponent);
+      Vue.component(renderName, renderComponent);
+      document.getElementById('renderStyle').innerHTML = data.style;
+      this.renderName = renderName;
     },
     readerFile(id){
-      Object(__WEBPACK_IMPORTED_MODULE_2__common_storage__["a" /* getLocal */])(`cache-${reply.id}`).then(data => {
-        __WEBPACK_IMPORTED_MODULE_0__common_fs__["a" /* default */].readerFile(file.id).then(res => {
+      Object(__WEBPACK_IMPORTED_MODULE_2__common_storage__["a" /* getLocal */])(`cache-${id}`).then(data => {
+        __WEBPACK_IMPORTED_MODULE_0__common_fs__["a" /* default */].readerFile(id).then(res => {
+          this.id = id
           let reader = new FileReader();
           reader.onloadend = _=> __WEBPACK_IMPORTED_MODULE_1__common_pubsub__["a" /* default */].inject('load', { id, data, code: reader.result })
           reader.readAsText(res);
