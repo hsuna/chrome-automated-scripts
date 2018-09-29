@@ -16,7 +16,7 @@
 }
 
 
-.msg-box {
+.toast-box {
   position: fixed;
   left:50%;
   top:50%;
@@ -100,11 +100,84 @@
 }
 
 .popup .popup-body {
+  position: relative;
   overflow-y: auto;
   width: 420px;
   height: 340px;
   padding: 15px;
   font-size: 14px;
+}
+
+.popup .popup-running{
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(255,255,255,.8);
+}
+
+.popup .popup-running .text{
+  text-align: center;
+  font-size: 16px;
+}
+
+.popup .popup-running .rectangle-bounce {
+  margin-top: 130px;
+  height: 52px;
+	text-align: center;
+}
+
+.popup .popup-running .rectangle-bounce div {
+	height: 100%;
+	width: 6px;
+	margin: 0 2px 0 0;
+	background-color: #999;
+	display: inline-block;
+	-webkit-animation: stretchdelay 1.2s infinite ease-in-out;
+	animation: stretchdelay 1.2s infinite ease-in-out
+}
+
+.popup .popup-running .rectangle-bounce .rect2 {
+	-webkit-animation-delay: -1.1s;
+	animation-delay: -1.1s
+}
+
+.popup .popup-running .rectangle-bounce .rect3 {
+	-webkit-animation-delay: -1.0s;
+	animation-delay: -1.0s
+}
+
+.popup .popup-running .rectangle-bounce .rect4 {
+	-webkit-animation-delay: -0.9s;
+	animation-delay: -0.9s
+}
+
+.popup .popup-running .rectangle-bounce .rect5 {
+	-webkit-animation-delay: -0.8s;
+	animation-delay: -0.8s
+}
+
+@-webkit-keyframes stretchdelay {
+	0%, 40%, 100% {
+		-webkit-transform: scaleY(0.4)
+	}
+
+	20% {
+		-webkit-transform: scaleY(1)
+	}
+}
+
+@keyframes stretchdelay {
+	0%, 40%, 100% {
+		transform: scaleY(0.4);
+		-webkit-transform: scaleY(0.4)
+	}
+
+	20% {
+		transform: scaleY(1);
+		-webkit-transform: scaleY(1)
+	}
 }
 
 .popup .popup-loading{

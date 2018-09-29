@@ -1,7 +1,7 @@
 import fs from "./common/fs"
 import PS from "./common/pubsub"
 
-import { getLocal, setLocal } from "./common/storage"
+import { getLocal, setLocal, removeLocal } from "./common/storage"
 
 const uuid = () => {
   const S4 = () => (((1 + Math.random()) * 0x10000) | 0).toString(16).substring(1)
@@ -12,7 +12,7 @@ let vm = new Vue({
   el: '#app',
   data: {
     id: null,
-    status: 0, //0：停止 1：运行 2：运行中 3：停止中 99：编辑
+    status: 0, //0：停止 1：运行 2：运行中 -1：编辑
 
     isShowFile: true,
     isShowLog: false,
@@ -24,8 +24,10 @@ let vm = new Vue({
     newFilePath: '',
     newFile: null,
     delFileIds: [],
-    checkIds: [],
 
+    checkFile: [],
+    batchFile:[],
+    
     fileList: [],
 
     renderName: '',
@@ -43,13 +45,14 @@ let vm = new Vue({
     PS.listen(PS.POPUP+'.init', reply => {
       this.id = reply.id
       this.renderData = reply.data
-      console.log(reply)
-      if(99 == this.status){
+      if(-1 == this.status){
         this.isShowFile = false;
         this.createRender(reply)
         this.status = 0
       }else if(1 == this.status){
         PS.inject('call', { name:'start', data: this.renderData })
+        this.log('================================')
+        this.toast(`开始运行【${this.getFileNameById(this.id)}】脚本`)
         this.status = 2;
       }else if(2 == this.status){
         PS.inject('call', { name:'continue' })
@@ -59,6 +62,12 @@ let vm = new Vue({
     /** 监听运行完成  */
     PS.listen(PS.POPUP+'.complete', data => {
       this.status = 0
+      this.toast('脚本运行完成')
+      this.log('================================')
+      if(this.fileBatch.length>0) {
+        let file = this.fileBatch.shift()
+        this.handlerRunFile(file)
+      }
     })
 
     /** 监听提示信息  */
@@ -98,6 +107,7 @@ let vm = new Vue({
         let item = this.fileList[i]
         if(this.delFileIds.includes(item.id)){
           this.fileList.splice(i, 1);
+          removeLocal(`cache-${item.id}`)
         }
       }
       setLocal('fileList', this.fileList).then(res => {
@@ -111,14 +121,16 @@ let vm = new Vue({
       this.newFilePath = ''
       this.dialogType = 'add'
     },
-    handlerSaveFile(file){
+    handlerSaveFile(){
       setLocal(`cache-${this.id}`, this.renderData).then(res => {
         this.toast('保存成功')
       })
     },
     handlerStopFile(){
-      this.status = 0;
+      PS.inject('call', { name:'stop' })
       this.toast('已暂停')
+      this.fileBatch = []
+      this.status = 0
     },
     handlerRunFile(file){
       if(file){
@@ -126,12 +138,14 @@ let vm = new Vue({
         this.readerFile(file.id)
       }else{
         this.status = 2
-        setLocal(`cache-${file.id}`, this.renderData)
+        setLocal(`cache-${this.id}`, this.renderData)
         PS.inject('call', { name:'start', data: this.renderData })
+        this.log('================================')
+        this.toast(`开始运行【${this.getFileNameById(this.id)}】脚本`)
       }
     },
     handlerModifyFile(file){
-      this.status = 99;
+      this.status = -1;
       this.readerFile(file.id)
     },
     handlerDeleteFile(file){
@@ -139,25 +153,18 @@ let vm = new Vue({
       this.dialogType = 'remove';
     },
     handlerBatchDelFile(){
-      if(this.checkIds.length>0){
-        this.delFileIds = [...this.checkIds];
+      if(this.checkFile.length>0){
+        this.delFileIds = this.checkFile.map(item => item.id)
         this.dialogType = 'remove';
       }else{
         this.toast('至少选中一条数据')
       }
     },
     handlerBatchRunFile(){
-      if(this.checkIds.length>0){
-       // this.delFileIds = [...this.checkIds];
-       // this.dialogType = 'remove';
-      }else{
-        this.toast('至少选中一条数据')
-      }
-    },
-    handlerBatchStopFile(){
-      if(this.checkIds.length>0){
-       // this.delFileIds = [...this.checkIds];
-       // this.dialogType = 'remove';
+      if(this.checkFile.length>0){
+        this.fileBatch = [...this.checkFile];
+        let file = this.fileBatch.shift()
+        this.handlerRunFile(file)
       }else{
         this.toast('至少选中一条数据')
       }
@@ -204,7 +211,7 @@ let vm = new Vue({
     /** 提示信息  */
     toast(txt = '', time = 1500) {
       let $msg = document.createElement('div')
-      $msg.innerHTML = `<div class="msg-box">${txt}</div>`
+      $msg.innerHTML = `<div class="toast-box">${txt}</div>`
       document.body.appendChild($msg)
       setTimeout(_ => document.body.removeChild($msg), time)
       this.log(txt)

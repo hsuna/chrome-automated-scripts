@@ -125,7 +125,7 @@ let vm = new Vue({
   el: '#app',
   data: {
     id: null,
-    status: 0, //0：停止 1：运行 2：运行中 3：停止中 99：编辑
+    status: 0, //0：停止 1：运行 2：运行中 -1：编辑
 
     isShowFile: true,
     isShowLog: false,
@@ -137,8 +137,10 @@ let vm = new Vue({
     newFilePath: '',
     newFile: null,
     delFileIds: [],
-    checkIds: [],
 
+    checkFile: [],
+    batchFile:[],
+    
     fileList: [],
 
     renderName: '',
@@ -156,13 +158,14 @@ let vm = new Vue({
     __WEBPACK_IMPORTED_MODULE_1__common_pubsub__["a" /* default */].listen(__WEBPACK_IMPORTED_MODULE_1__common_pubsub__["a" /* default */].POPUP+'.init', reply => {
       this.id = reply.id
       this.renderData = reply.data
-      console.log(reply)
-      if(99 == this.status){
+      if(-1 == this.status){
         this.isShowFile = false;
         this.createRender(reply)
         this.status = 0
       }else if(1 == this.status){
         __WEBPACK_IMPORTED_MODULE_1__common_pubsub__["a" /* default */].inject('call', { name:'start', data: this.renderData })
+        this.log('================================')
+        this.toast(`开始运行【${this.getFileNameById(this.id)}】脚本`)
         this.status = 2;
       }else if(2 == this.status){
         __WEBPACK_IMPORTED_MODULE_1__common_pubsub__["a" /* default */].inject('call', { name:'continue' })
@@ -172,6 +175,12 @@ let vm = new Vue({
     /** 监听运行完成  */
     __WEBPACK_IMPORTED_MODULE_1__common_pubsub__["a" /* default */].listen(__WEBPACK_IMPORTED_MODULE_1__common_pubsub__["a" /* default */].POPUP+'.complete', data => {
       this.status = 0
+      this.toast('脚本运行完成')
+      this.log('================================')
+      if(this.fileBatch.length>0) {
+        let file = this.fileBatch.shift()
+        this.handlerRunFile(file)
+      }
     })
 
     /** 监听提示信息  */
@@ -197,7 +206,7 @@ let vm = new Vue({
       
       __WEBPACK_IMPORTED_MODULE_0__common_fs__["a" /* default */].writerFile(data.id, this.newFile).then(res => {
         this.fileList.push(data)
-        return Object(__WEBPACK_IMPORTED_MODULE_2__common_storage__["b" /* setLocal */])('fileList', this.fileList)
+        return Object(__WEBPACK_IMPORTED_MODULE_2__common_storage__["c" /* setLocal */])('fileList', this.fileList)
       }).then(res => {
         this.dialogType = null
         this.newFile = null
@@ -211,9 +220,10 @@ let vm = new Vue({
         let item = this.fileList[i]
         if(this.delFileIds.includes(item.id)){
           this.fileList.splice(i, 1);
+          Object(__WEBPACK_IMPORTED_MODULE_2__common_storage__["b" /* removeLocal */])(`cache-${item.id}`)
         }
       }
-      Object(__WEBPACK_IMPORTED_MODULE_2__common_storage__["b" /* setLocal */])('fileList', this.fileList).then(res => {
+      Object(__WEBPACK_IMPORTED_MODULE_2__common_storage__["c" /* setLocal */])('fileList', this.fileList).then(res => {
         this.dialogType = null
         this.delFileIds = [];
         this.toast('删除成功')
@@ -224,14 +234,16 @@ let vm = new Vue({
       this.newFilePath = ''
       this.dialogType = 'add'
     },
-    handlerSaveFile(file){
-      Object(__WEBPACK_IMPORTED_MODULE_2__common_storage__["b" /* setLocal */])(`cache-${this.id}`, this.renderData).then(res => {
+    handlerSaveFile(){
+      Object(__WEBPACK_IMPORTED_MODULE_2__common_storage__["c" /* setLocal */])(`cache-${this.id}`, this.renderData).then(res => {
         this.toast('保存成功')
       })
     },
     handlerStopFile(){
-      this.status = 0;
+      __WEBPACK_IMPORTED_MODULE_1__common_pubsub__["a" /* default */].inject('call', { name:'stop' })
       this.toast('已暂停')
+      this.fileBatch = []
+      this.status = 0
     },
     handlerRunFile(file){
       if(file){
@@ -239,12 +251,14 @@ let vm = new Vue({
         this.readerFile(file.id)
       }else{
         this.status = 2
-        Object(__WEBPACK_IMPORTED_MODULE_2__common_storage__["b" /* setLocal */])(`cache-${file.id}`, this.renderData)
+        Object(__WEBPACK_IMPORTED_MODULE_2__common_storage__["c" /* setLocal */])(`cache-${this.id}`, this.renderData)
         __WEBPACK_IMPORTED_MODULE_1__common_pubsub__["a" /* default */].inject('call', { name:'start', data: this.renderData })
+        this.log('================================')
+        this.toast(`开始运行【${this.getFileNameById(this.id)}】脚本`)
       }
     },
     handlerModifyFile(file){
-      this.status = 99;
+      this.status = -1;
       this.readerFile(file.id)
     },
     handlerDeleteFile(file){
@@ -252,25 +266,18 @@ let vm = new Vue({
       this.dialogType = 'remove';
     },
     handlerBatchDelFile(){
-      if(this.checkIds.length>0){
-        this.delFileIds = [...this.checkIds];
+      if(this.checkFile.length>0){
+        this.delFileIds = this.checkFile.map(item => item.id)
         this.dialogType = 'remove';
       }else{
         this.toast('至少选中一条数据')
       }
     },
     handlerBatchRunFile(){
-      if(this.checkIds.length>0){
-       // this.delFileIds = [...this.checkIds];
-       // this.dialogType = 'remove';
-      }else{
-        this.toast('至少选中一条数据')
-      }
-    },
-    handlerBatchStopFile(){
-      if(this.checkIds.length>0){
-       // this.delFileIds = [...this.checkIds];
-       // this.dialogType = 'remove';
+      if(this.checkFile.length>0){
+        this.fileBatch = [...this.checkFile];
+        let file = this.fileBatch.shift()
+        this.handlerRunFile(file)
       }else{
         this.toast('至少选中一条数据')
       }
@@ -317,7 +324,7 @@ let vm = new Vue({
     /** 提示信息  */
     toast(txt = '', time = 1500) {
       let $msg = document.createElement('div')
-      $msg.innerHTML = `<div class="msg-box">${txt}</div>`
+      $msg.innerHTML = `<div class="toast-box">${txt}</div>`
       document.body.appendChild($msg)
       setTimeout(_ => document.body.removeChild($msg), time)
       this.log(txt)
@@ -371,8 +378,8 @@ const fs = {
 
 "use strict";
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return getLocal; });
-/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "b", function() { return setLocal; });
-/* unused harmony export removeLocal */
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "c", function() { return setLocal; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "b", function() { return removeLocal; });
 const getLocal = key => new Promise(resolve => chrome.storage.local.get(key, data => resolve(data[key])))
 const setLocal = (key, value) => new Promise(resolve => chrome.storage.local.set({[key]: value}, resolve))
 const removeLocal = key => new Promise(resolve => chrome.storage.local.remove(key, resolve))

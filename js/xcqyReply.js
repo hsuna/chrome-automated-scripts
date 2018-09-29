@@ -204,7 +204,6 @@ module.exports = Reply => class XcqyReply extends Reply{
         }
     }
     submitReply(){
-        
         let $form = $('#js_reply_form')
         $.getJSON($form.attr('action'), $form.serialize(), data => {
             if(!data.error) {

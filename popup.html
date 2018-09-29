@@ -21,7 +21,7 @@
 					<ul>
 						<li v-for="(index, file) in fileList">
 							<label :title="file.path">
-								<input type="checkbox" v-model="checkIds" :value="file.id"/>
+								<input type="checkbox" v-model="checkFile" :value="file.id"/>
 								{{file.name}}
 							</label>
 							<a href="javascript:;" @click="handlerRunFile(file)">[运行]</a>
@@ -33,16 +33,36 @@
 				<div v-else class="popup-renderer">
 					<component :is="renderName" :data="renderData"></component>
 				</div>
+				<div v-show="status>0" class="popup-running">
+					<div class="rectangle-bounce">
+						<div class="rect1"></div>
+						<div class="rect2"></div>
+						<div class="rect3"></div>
+						<div class="rect4"></div>
+						<div class="rect5"></div>
+					</div>
+					<p class="text">运行中</p>
+				</div>
 			</div>
 			<div class="popup-footer">
 				<div v-show="isShowFile" class="pull-left">
-					<button type="button" class="btn" @click="handlerAddFile">新增</button>
-					<button type="button" class="btn" @click="handlerBatchDelFile">删除</button>
-					<button type="button" class="btn" @click="handlerBatchRunFile">运行</button>
+					<template v-if="0==status">
+						<button type="button" class="btn" @click="handlerAddFile">新增</button>
+						<button type="button" class="btn" @click="handlerBatchDelFile">删除</button>
+						<button type="button" class="btn" @click="handlerBatchRunFile">运行</button>
+					</template>
+					<template v-if="status>0">
+						<button type="button" class="btn" @click="handlerStopFile">停止</button>
+					</template>
 				</div>
 				<div v-else class="pull-left">
-					<button type="button" class="btn" @click="handlerSaveFile">保存</button>
-					<button type="button" class="btn" @click="handlerRunFile()">{{0==status?'运行':'停止'}}</button>
+					<template v-if="0==status">
+						<button type="button" class="btn" @click="handlerSaveFile">保存</button>
+						<button type="button" class="btn" @click="handlerRunFile()">运行</button>
+					</template>
+					<template v-if="status>0">
+						<button type="button" class="btn" @click="handlerStopFile">停止</button>
+					</template>
 				</div>
 				<button type="button" class="btn" @click="isShowLog=true">打印信息</button>
 			</div>
