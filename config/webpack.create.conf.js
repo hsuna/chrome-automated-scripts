@@ -4,7 +4,7 @@ const UglifyJsPlugin = require('uglifyjs-webpack-plugin')
 const CleanWebpackPlugin = require('clean-webpack-plugin')
 
 entry = {}
-glob.sync('./src/script/*.js').map(filepath => entry[path.basename(filepath, '.js')] = filepath)
+glob.sync('./src/script/*.js').map(filepath => entry[path.basename(filepath, '.js').toLowerCase()] = filepath)
 
 module.exports = {
   entry,

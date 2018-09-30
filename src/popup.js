@@ -133,6 +133,7 @@ let vm = new Vue({
         if(this.dialogDelete.includes(item.id)){
           this.fileList.splice(i, 1);
           removeLocal(`cache-${item.id}`)
+          fs.deleteFile(item.id)
         }
       }
       setLocal('fileList', this.fileList).then(res => {

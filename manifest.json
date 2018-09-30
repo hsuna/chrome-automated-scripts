@@ -1,21 +1,21 @@
 {
   "manifest_version": 2,
-  "name": "自动回复",
+  "name": "脚本自动运行工具",
   "version": "0.0.1",
   "author": "hsuna",
-  "description": "游戏后台客服反馈系统-自动回复",
+  "description": "脚本自动运行工具",
   "icons": {
     "16": "images/icon16.png",
     "48": "images/icon48.png",
     "128": "images/icon128.png"
   },
 
-  "page_action": {
+  "browser_action": {
     "default_icon": {
       "19": "images/icon19.png",
       "38": "images/icon38.png"
     },
-    "default_title": "自动回复",
+    "default_title": "脚本自动运行工具",
     "default_popup": "popup.html"
   },
   "background": {
@@ -29,7 +29,7 @@
   "content_security_policy": "script-src 'self' 'unsafe-eval'; object-src 'self'",
   "content_scripts": [
     {
-      "matches": ["*://*.baidu.com/*","*://*.shiyuegame.com/*"],
+      "matches": ["<all_urls>"],
       "css": [],
       "js": ["js/lib/jq.min.js", "js/inject.js"]
     }
