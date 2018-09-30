@@ -192,3 +192,13 @@ sleep()：延迟/睡眠方法
 toast(message)：提示方法
 log(message)：历史记录方法
 ```
+
+> 详细可以看下 `DemoScript` 文件
+
+## 参考文献
+
+* [ 谷歌浏览器扩展程序manifest.json参数详解 ](https://www.cnblogs.com/GoCircle/p/9332836.html)
+* [ Chromium扩展（Extension）通信机制分析 ](https://blog.csdn.net/luoshengyang/article/details/52519089)
+* [ vue与chrome浏览器插件开发 ](http://ju.outofmemory.cn/entry/349592)
+* [ HTML5 本地文件操作之FileSystemAPI简介 ](https://www.cnblogs.com/tianma3798/p/6439258.html)
+*  [使用HTML5 FileWriter truncatetable](http://www.itdaan.com/blog/2011/07/22/193e5a9f5d8785dbbe9d60e08c437c1c.html)
