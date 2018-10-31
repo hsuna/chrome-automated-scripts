@@ -3,9 +3,15 @@ import BaseScript from './module/BaseScript'
 
 let script;
 
+const getSubClass = code => (self => {
+  new Function(code).call(self)
+  let subClass = self.default || self.SubScript && ('function' === typeof self.SubScript ? self.SubScript : self.SubScript.default)
+  return subClass(BaseScript)
+})({})
+
 PS.listen(PS.INJECT+'.load', ({ id, code, data }) => {
   try{
-    let SubScript = new Function(`return ${code.replace(/^[\+\-\*\/\!]*(function)/, "$1")}`)()(BaseScript)
+    let SubScript = getSubClass(code)
     script = new SubScript(id)
     script.init(data)
   }catch(e){

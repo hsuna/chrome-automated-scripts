@@ -1,4 +1,4 @@
-module.exports = BaseScript => class DemoScript extends BaseScript{
+export default BaseScript => class DemoScript extends BaseScript{
     constructor(id){
         super(id)
         this.name = '测试样例'
