@@ -3,8 +3,7 @@ import BaseScript from './module/BaseScript'
 
 let script;
 
-const getSubClass = code => {
-  const context = {}
+const getSubClass = (code, context={}) => {
   Function.prototype.constructor('BaseScript', code).call(context, BaseScript)
   return context['SubScript'].default
 }
