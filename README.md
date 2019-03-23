@@ -6,7 +6,7 @@
 
 ## 启动
 
-1.  `git clone http://git.3k.com/web/FE/chrome-automated-scripts.git`
+1.  `git clone https://github.com/hsuna/chrome-automated-scripts.git`
 3.  安装依赖：`npm i`
 4.  开发：`npm run dev`
 5.  生产：`npm run build`

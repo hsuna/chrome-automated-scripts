@@ -1,7 +1,7 @@
 {
   "manifest_version": 2,
   "name": "脚本自动运行工具",
-  "version": "0.0.1",
+  "version": "1.0.0",
   "author": "hsuna",
   "description": "脚本自动运行工具",
   "icons": {

@@ -1,21 +1,19 @@
 const glob = require("glob")
 const path = require('path')
-const UglifyJsPlugin = require('uglifyjs-webpack-plugin')
-const CleanWebpackPlugin = require('clean-webpack-plugin')
 
 entry = {}
 glob.sync('./src/script/*.js').map(filepath => entry[path.basename(filepath, '.js').toLowerCase()] = filepath)
 
 module.exports = {
+  name:'构建脚本文件',
+  mode: 'production',
   entry,
   output: {
-    filename: "./scripts/[name].min.js",
-    libraryTarget:'umd'
+    path: path.resolve(__dirname, '../scripts'),
+    filename: "[name].min.js",
+    library:'SubScript',
+    libraryTarget:'this',
   },
   plugins: [
-    new UglifyJsPlugin({
-      sourceMap: false
-    }),
-    new CleanWebpackPlugin(['./scripts'])
   ]
 }

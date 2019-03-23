@@ -14,7 +14,7 @@ export default class BaseReply{
         this.data = this.parse(data)
         this.save()
         //运行数据
-        this.toast('自动回复开始，请勿操作')
+        this.toast('脚本自动运行中，请勿操作')
         this.run()
     }
     async [_continue](){
@@ -49,7 +49,7 @@ export default class BaseReply{
     }
     complete(){
         this.isStop = true;
-        this.toast('自动回复完成')
+        this.toast('脚本自动运行结束')
         PS.popup('complete')
     }
     fail(msg){

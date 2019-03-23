@@ -3,15 +3,15 @@ import BaseScript from './module/BaseScript'
 
 let script;
 
-const getSubClass = code => (self => {
-  new Function(code).call(self)
-  let subClass = self.default || self.SubScript && ('function' === typeof self.SubScript ? self.SubScript : self.SubScript.default)
-  return subClass(BaseScript)
-})({})
+const getSubClass = code => {
+  const context = {}
+  Function.prototype.constructor('BaseScript', code).call(context, BaseScript)
+  return context['SubScript'].default
+}
 
 PS.listen(PS.INJECT+'.load', ({ id, code, data }) => {
   try{
-    let SubScript = getSubClass(code)
+    const SubScript = getSubClass(code)
     script = new SubScript(id)
     script.init(data)
   }catch(e){
