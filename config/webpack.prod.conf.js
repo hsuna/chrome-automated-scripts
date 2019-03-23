@@ -18,27 +18,24 @@ module.exports = {
     new webpack.DefinePlugin({
       NODE_ENV: '"production"'
     }),
-    new CleanWebpackPlugin(['./dist']),
+    new CleanWebpackPlugin(),
     new CopyWebpackPlugin([
       {
         from: {
           glob:'./@(images|css)/**',
           dot: true
         },
-        to: 'dist'
       },
       {
         from: './src/lib/**',
-        to: 'dist/js/lib',
+        to: './js/lib',
         flatten: true
       },
       {
         from: './*.html',
-        to: 'dist',
       },
       {
         from: './manifest.json',
-        to:'dist'
       }
     ])
   ]
